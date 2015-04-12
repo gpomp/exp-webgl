@@ -2,14 +2,21 @@
 
 var glslify = require('glslify');
 
-var pVertex = glslify('./../../shaders/cubeExample/plane/vertex.glsl');
-var pFragment = glslify('./../../shaders/cubeExample/plane/fragment.glsl');
+var gVertex = glslify('./../../shaders/landscape/ground/vertex.glsl');
+var gFragment = glslify('./../../shaders/landscape/ground/fragment.glsl');
+
+var sVertex = glslify('./../../shaders/landscape/snowfield/vertex.glsl');
+var sFragment = glslify('./../../shaders/landscape/snowfield/fragment.glsl');
 
 
 
 window['SHADERLIST'] = {
-    plane: {
-        vertex: pVertex,
-        fragment: pFragment
+    ground: {
+        vertex: gVertex,
+        fragment: gFragment
+    },
+    snowfield: {
+        vertex: sVertex,
+        fragment: sFragment
     }
 }

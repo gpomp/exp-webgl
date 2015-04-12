@@ -1,5 +1,6 @@
 /// <reference path="../../../../typings/threejs/three.d.ts" />
 /// <reference path="../Site.d.ts" />
+/// <reference path="../core/Scene3D.d.ts" />
 declare module webglExp {
     class MouseSpeed {
         distSquared: number;
@@ -62,12 +63,21 @@ declare module THREE {
     }
     class VerticalBlurShader {
     }
+    class FXAAShader {
+    }
+    class ShaderPass {
+        uniforms: any;
+        renderToScreen: any;
+        constructor(...args: any[]);
+    }
+    class RenderPass {
+        constructor(...args: any[]);
+    }
     class BloomPass {
         static blurX: any;
         static blurY: any;
-        constructor(...args: any[]);
-    }
-    class FXAAShader {
+        copyUniforms: any;
+        constructor(strength: any, kernelSize: any, sigma: any, resolution: any, maskActive: any);
     }
     class EffectComposer {
         constructor(...args: any[]);
@@ -75,6 +85,20 @@ declare module THREE {
 }
 declare var TheMath: Math;
 declare module THREE {
+    class Mouse2DControls {
+        private _object;
+        private lastPos;
+        private _pos;
+        private _currPos;
+        private _enabled;
+        constructor(object: THREE.Object3D);
+        onMouseDown: (event: any) => void;
+        onMouseUp: (event: any) => void;
+        onMouseMove: (event: any) => void;
+        transformCoordinates(v: THREE.Vector2): THREE.Vector2;
+        toggleEnable(b: boolean): void;
+        render(): void;
+    }
     class MouseControls {
         enabled: any;
         orientation: any;

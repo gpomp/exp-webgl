@@ -22,6 +22,9 @@
     },
     "node/node.d.ts": {
       "commit": "65ea56c919fd95dcd0ca3c59c9aa5eaa99c86885"
+    },
+    "greensock/greensock.d.ts": {
+      "commit": "4c9851e6e8ab0c7e035758c1b04b4357995ff957"
     }
   }
 }

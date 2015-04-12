@@ -157,13 +157,15 @@ gulp.task('watch', function () {
     gulp.watch(config.app + "less/**/*.less", ['handlebars']);
     
     // TYPESCRIPT
-    gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts'], ['base-code']);
+    gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts', "!" + config.app + "typescript/base/LaunchSite.ts"], ['base-code']);
     gulp.watch([config.app + 'typescript/**/**/*.ts', 
                 config.app + 'typescript/**/*.ts',
                 config.app + 'shaders/**/*.glsl',                
                 config.app + 'shaders/*.glsl',                
                 "!" + config.app + 'typescript/base/**/*.ts', 
                 "!" + config.app + 'typescript/base/*.ts'], ['handlebars']);
+
+    gulp.watch([config.app + "typescript/base/LaunchSite.ts"], ['base-includes'])
 
     // HTML
     gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], ['handlebars']);

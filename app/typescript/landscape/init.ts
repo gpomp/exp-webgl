@@ -1,14 +1,147 @@
 /// <reference path="../../../typings/threejs/three.d.ts" />
 /// <reference path="../definitions/core/GLAnimation.d.ts" />
 /// <reference path="../definitions/Site.d.ts" />
+/// <reference path="../definitions/helper/Utils.d.ts" />
+/// <reference path="../../../typings/greensock/greensock.d.ts" />
 
 declare var SHADERLIST;
 
 module webglExp {
-	export class CubeExample extends webglExp.GLAnimation {
+
+    export class SnowField {
+
+        static NB_PARTICLES_X: number = 70;
+        static NB_PARTICLES_Y: number = 70;
+
+        private _uniforms;
+        private _attributes;
+
+        private _snowField: THREE.PointCloud;
+
+        constructor(w:number, h:number) {
+
+            var flakeTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/flake.jpg');
+
+            this._uniforms = {
+                time: {
+                    type: 'f',
+                    value: Math.random() * 100
+                }, 
+                width: {
+                    type: 'f',
+                    value: w
+                },  
+                height: {
+                    type: 'f',
+                    value: h
+                }, 
+                flake: {
+                    type: 't',
+                    value: flakeTexture
+                }, 
+                scroll: {
+                    type: 'v2',
+                    value: new THREE.Vector2(0, 0)
+                }
+            };
+            this._attributes = {
+                modValue: {
+                    type: 'v2',
+                    value: null
+                }
+            };
+
+            var geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
+            var vPos: number[][] = [];
+
+            var hw: number = w / 2;
+            var hh: number = h / 2;
+
+            var wSeg: number = w / SnowField.NB_PARTICLES_X;
+            var hSeg: number = w / SnowField.NB_PARTICLES_Y;
+
+            for (var y = 0; y < SnowField.NB_PARTICLES_Y; ++y) {
+                var yp: number = -hh + y * hSeg - hSeg * 0.5 + hSeg * Math.random();
+                for (var x = 0; x < SnowField.NB_PARTICLES_X; ++x) {
+                     var xp: number = -hw + x * wSeg - wSeg * 0.5 + wSeg * Math.random();
+
+                    vPos.push([xp, 0, yp]);
+                }
+            }
+
+            var vertices = new Float32Array( vPos.length * 3 );
+            var modValue = new Float32Array( vPos.length * 2 );
+
+            for ( var i = 0; i < vPos.length; i++ ) {
+                vertices[ i*3 + 0 ] = vPos[i][0];
+                vertices[ i*3 + 1 ] = vPos[i][1];
+                vertices[ i*3 + 2 ] = vPos[i][2];
+
+                modValue[ i*2 + 0 ] = 0.3 + Math.floor(Math.random() * 100) / 100;
+                modValue[ i*2 + 1 ] = 400 + Math.random() * 400.0;
+            }
+
+            geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+            geometry.addAttribute( 'modValue', new THREE.BufferAttribute( modValue, 2 ) );
+
+            var snowMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
+                vertexShader: SHADERLIST.snowfield.vertex,
+                fragmentShader: SHADERLIST.snowfield.fragment,
+                side: THREE.DoubleSide,
+                uniforms: this._uniforms,
+                attributes: this._attributes,
+                transparent: true,
+                blending: THREE.AdditiveBlending 
+            });
+
+            this._snowField = new THREE.PointCloud(geometry, snowMat);
+
+            this._snowField.position.y = -500;
+        }
+
+        getField():THREE.PointCloud {
+            return this._snowField;
+        }
+
+        setScroll(s:THREE.Vector2) {
+            this._uniforms.scroll.value = s;
+        }
+
+        render() {
+            this._uniforms.time.value += 0.01;
+        }
+    }
+
+	export class Landscape extends webglExp.GLAnimation {
         private _scene: THREE.Scene;
         private _camera: THREE.PerspectiveCamera;
         private _renderer: THREE.WebGLRenderer;
+        private _gui;
+
+        private _ground: THREE.Mesh;
+
+        private _uniforms;
+        private _attributes;
+
+        private _inEarthQuake: boolean;
+        private _checkVal: number;
+        private _checkDir: number;
+        private _countFrames: number;
+
+        private _keyControls: utils.GameKeyBoardControl;
+        private _speedX: number;
+        private _speedY: number;
+        private _speedXToGo: number;
+        private _speedYToGo: number;
+
+        private _angleX: number;
+        private _angleY: number;
+        private _angleXToGo: number;
+        private _angleYToGo: number;
+
+        private _camBaseAngle: THREE.Vector2;
+
+        private _snowField: webglExp.SnowField;
 
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
@@ -17,19 +150,273 @@ module webglExp {
             this._camera = camera;
             this._renderer = renderer;
 
+            this._renderer.setClearColor(new THREE.Color(255, 255, 255));
+
+            this._gui = super.getGui().get_gui();
+
+            var w: number = Scene3D.WIDTH * 3;
+            var h: number = 4000;
+
+            var grassTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/grass.jpg');
+            grassTexture.wrapS = THREE.RepeatWrapping;
+            grassTexture.wrapT = THREE.RepeatWrapping;
+
+            var snowTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/snow.jpg');
+            snowTexture.wrapS = THREE.RepeatWrapping;
+            snowTexture.wrapT = THREE.RepeatWrapping;
+
+            var rockTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/rock.jpg');
+            rockTexture.wrapS = THREE.RepeatWrapping;
+            rockTexture.wrapT = THREE.RepeatWrapping;
+
+            var crackTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/crack.jpg');
+            crackTexture.wrapS = THREE.RepeatWrapping;
+            crackTexture.wrapT = THREE.RepeatWrapping;
+
+            this._uniforms = {
+                time: {
+                    type: 'f',
+                    value: 0.0
+                },
+                width: {
+                    type: 'f',
+                    value: w
+                },
+                height: {
+                    type: 'f',
+                    value: h
+                },
+                noisePond: {
+                    type: 'f',
+                    value: 1000.0
+                },
+                heightVal: {
+                    type: 'f',
+                    value: 1000.0
+                },
+                scroll: {
+                    type: 'v2',
+                    value: new THREE.Vector2(0)
+                },
+                fogRatio: {
+                    type: 'f',
+                    value: 0.8
+                },
+                light: {
+                    type: 'v3',
+                    value: new THREE.Vector3(0.29, -1.0, 1.0)
+                },
+                grass: {
+                    type: 't',
+                    value: grassTexture
+                },
+                snow: {
+                    type: 't',
+                    value: snowTexture
+                },
+                rock: {
+                    type: 't',
+                    value: rockTexture
+                },
+                crack: {
+                    type: 't',
+                    value: crackTexture
+                },
+                repeatText: {
+                    type: 'v2',
+                    value: new THREE.Vector2(256, 256)
+                }
+            }
+
+             var lightFolder = this._gui.addFolder("Light Position");
+             lightFolder.add(this._uniforms.light.value, 'x', -1, 1);
+             lightFolder.add(this._uniforms.light.value, 'y', -1, 1);
+             lightFolder.add(this._uniforms.light.value, 'z', -1, 1);
+             this._gui.add(this, 'earthQuake');
+
+            this._attributes = {
+                
+            }
+
+            var planeGeom:THREE.BufferGeometry = this.createCustomPlaneGeometry(w, h);
+
             var planeMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
-                vertexShader:   SHADERLIST.plane.vertex,
-                fragmentShader: SHADERLIST.plane.fragment,
-                side:THREE.DoubleSide
-            })
-            var planeGeom: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(100, 100);
-            var mesh: THREE.Mesh = new THREE.Mesh(planeGeom, planeMat);
-            scene.add(mesh);
-            camera.lookAt(mesh.position);
+                vertexShader: SHADERLIST.ground.vertex,
+                fragmentShader: SHADERLIST.ground.fragment,
+                uniforms: this._uniforms,
+                attributes: this._attributes,
+                side: THREE.DoubleSide
+            });
+
+
+            this._ground = new THREE.Mesh(planeGeom, planeMat);
+            this._ground.rotation.x = Math.PI / 2;
+            this._ground.position.y = -1000;
+            scene.add(this._ground);
+
+            this._snowField = new webglExp.SnowField(w, h);
+            this._scene.add(this._snowField.getField());
+
+            this._camera.position.z = 2500;
+            camera.lookAt(this._ground.position);
+
+            this._camBaseAngle = new THREE.Vector2(this._camera.rotation.x, this._camera.rotation.z);
+            this._speedX = this._speedY = 0;
+            this._speedXToGo = this._speedYToGo = 0;
+            this._angleX = this._camBaseAngle.y;
+            this._angleY = this._camBaseAngle.x;
+            this._angleXToGo = this._camBaseAngle.y;
+            this._angleYToGo = this._camBaseAngle.x;
+            this._keyControls = new utils.GameKeyBoardControl(this.keydown, this.keyup);
 		}
+
+        keydown = (key:string) => {
+            switch (key) {
+                case "up":
+                     this._speedYToGo = 20;
+                     this._angleYToGo = this._camBaseAngle.x - 0.05;
+                    break;
+                case "down":
+                    this._speedYToGo = -20;
+                     this._angleYToGo = this._camBaseAngle.x + 0.05;
+                    break;
+                case "left":
+                    this._speedXToGo = -20;
+                     this._angleXToGo = this._camBaseAngle.y + 0.1;
+                    break;
+                case "right":
+                    this._speedXToGo = 20;
+                     this._angleXToGo = this._camBaseAngle.y - 0.1;
+                    break;
+            }
+        }
+
+        keyup = (key:string) => {
+            switch (key) {
+                case "up":
+                case "down":
+                    this._speedYToGo = 0;
+                    this._angleYToGo = this._camBaseAngle.x;
+                    break;
+                case "left":
+                case "right":
+                    this._speedXToGo = 0;
+                    this._angleXToGo = this._camBaseAngle.y;
+                    break;
+            }
+        }
+
+        earthQuake = () => {
+            this._inEarthQuake = true;
+            this._checkVal = 0;
+            this._checkDir = 1;
+            this._countFrames = 0;
+            TweenLite.to(this, 3, { _checkVal: 1, ease: Sine.easeIn });
+
+            var to: number = this._uniforms.heightVal.value === 1000 ? 2000 : 1000;
+            TweenLite.to(this._uniforms.heightVal, 3, { value: to, ease: Expo.easeInOut, delay: 3 });
+            TweenLite.to(this, 3, { _checkVal: 0, ease: Sine.easeIn, delay: 6, onComplete: this.endEarthQuake });
+        }
+
+        createCustomPlaneGeometry(w:number, h:number):THREE.BufferGeometry {
+            var vW: number = 300;
+            var vH: number = 300;
+            var vW1: number = vW + 1;
+            var vH1: number = vH + 1;
+
+            var vPos: number[][] = [];
+
+            var widthHalf: number = w / 2;
+            var heightHalf: number = h / 2;
+
+            var wGap: number = w / vW;
+            var hGap: number = h / vH;
+
+            var vertices = new Float32Array( vW1 * vH1 * 3 );
+            var uvs = new Float32Array( vW1 * vH1 * 2 );
+
+            var offset = 0;
+            var offset2 = 0;
+            var vy: number;
+            for (var y = 0; y < vH1; ++y) {
+                vy = -heightHalf + y * hGap - hGap * 0.5 + Math.random() * hGap;
+                for (var x = 0; x < vW1; ++x) {
+                    var vx = -widthHalf + x * wGap - wGap * 0.5 + Math.random() * wGap;
+                    vertices[ offset   ] = vx;
+                    vertices[offset + 1] = -vy;
+
+                    uvs[ offset2     ] = (vx + widthHalf) / w;
+                    uvs[ offset2 + 1 ] = 1 - ( (vy + heightHalf) / h );
+
+                    offset += 3;
+                    offset2 += 2;
+                }
+            }
+            
+            offset = 0;
+
+            var indices = new ( ( vertices.length / 3 ) > 65535 ? Uint32Array : Uint16Array )( vW * vH * 6 );
+
+            for ( var iy = 0; iy < vH; iy ++ ) {
+
+                for ( var ix = 0; ix < vW; ix ++ ) {
+
+                    var a = ix + vW1 * iy;
+                    var b = ix + vW1 * ( iy + 1 );
+                    var c = ( ix + 1 ) + vW1 * ( iy + 1 );
+                    var d = ( ix + 1 ) + vW1 * iy;
+
+                    indices[ offset     ] = a;
+                    indices[ offset + 1 ] = b;
+                    indices[ offset + 2 ] = d;
+
+                    indices[ offset + 3 ] = b;
+                    indices[ offset + 4 ] = c;
+                    indices[ offset + 5 ] = d;
+
+                    offset += 6;
+
+                }
+
+            }
+
+
+ 
+            var planeGeom: THREE.BufferGeometry = new THREE.BufferGeometry();
+
+            planeGeom.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
+            planeGeom.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+            planeGeom.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+
+            return planeGeom;
+        }
+
+        endEarthQuake = () => {
+            this._inEarthQuake = false;
+        }
 
 
 		render() {
+            this._uniforms.time.value += 0.01;
+            this._uniforms.scroll.value.y -= this._speedY;
+            this._uniforms.scroll.value.x += this._speedX;
+
+            this._snowField.setScroll(this._uniforms.scroll.value);
+            this._snowField.render();
+
+            this._speedX += (this._speedXToGo - this._speedX) * 0.1;
+            this._speedY += (this._speedYToGo - this._speedY) * 0.1;
+            this._camera.rotation.x = this._angleY;
+            this._camera.rotation.z = this._angleX;
+            this._angleX += (this._angleXToGo - this._angleX) * 0.3;
+            this._angleY += (this._angleYToGo - this._angleY) * 0.3;
+
+            if(this._inEarthQuake) {
+                this._camera.position.x = this._checkVal * this._checkDir * 50;
+                if(this._countFrames%3 === 0) this._checkDir *= -1;
+                this._countFrames++;
+            }
+
 			super.render();
 		}
 
@@ -40,7 +427,7 @@ module webglExp {
 }
 
 var siteReady = function(scene3d:webglExp.Scene3D) {
-	var anim = new webglExp.CubeExample(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
+	var anim = new webglExp.Landscape(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
 	scene3d.setAnim(anim);
 }
 

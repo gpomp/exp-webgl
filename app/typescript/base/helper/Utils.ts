@@ -26,4 +26,74 @@ module utils {
            return result;
         }
     }
+
+    export class GameKeyBoardControl {
+
+        private _callbackKeyPressed:Function;
+        private _callbackKeyUp:Function;
+
+        constructor(callbackKeyPressed:Function, callbackKeyUp:Function) {
+            this._callbackKeyPressed = callbackKeyPressed;
+            this._callbackKeyUp = callbackKeyUp;
+
+            document.addEventListener('keydown', this.keydown);
+            document.addEventListener('keyup', this.keyup);
+        }
+
+        keydown = (event:KeyboardEvent) => {
+            var key: string = '';
+
+            switch(event.keyCode) {
+                case 87:
+                case 38:
+                    key = 'up';
+                break;
+                case 83:
+                case 40:
+                    key = 'down';
+                break;
+                case 65:
+                case 37:
+                    key = 'left';
+                break;
+                case 68:
+                case 39:
+                    key = 'right';
+                break;
+                case 13:
+                    key = 'enter';
+                break;
+            }
+
+            this._callbackKeyPressed(key);
+        }
+
+        keyup = (event:KeyboardEvent) => {
+            var key: string = '';
+
+            switch(event.keyCode) {
+                case 87:
+                case 38:
+                    key = 'up';
+                break;
+                case 83:
+                case 40:
+                    key = 'down';
+                break;
+                case 65:
+                case 37:
+                    key = 'left';
+                break;
+                case 68:
+                case 39:
+                    key = 'right';
+                break;
+                case 13:
+                    key = 'enter';
+                break;
+            }
+
+            this._callbackKeyUp(key);
+        }
+    }
 }

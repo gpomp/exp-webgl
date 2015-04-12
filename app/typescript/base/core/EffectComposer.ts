@@ -1,7 +1,6 @@
 /// <reference path="../../../../typings/threejs/three.d.ts" />
 /// <reference path="Gui.ts" />
 
-
 module webglExp {
 	export class EffectComposer {
 
@@ -23,7 +22,7 @@ module webglExp {
 			
 			this.renderer = renderer;
 			this.scene = scene;
-			this.camera = camera;
+			this.camera = camera; 
 			this.width = width;
 			this.height = height;
 

@@ -1,5 +1,6 @@
 /// <reference path="../../../../typings/threejs/three.d.ts" />
 /// <reference path="../Site.ts" />
+/// <reference path="../core/Scene3D.ts" />
 
 module webglExp {
 
@@ -158,13 +159,24 @@ module THREE {
 declare module THREE {
 	export class HorizontalBlurShader{}
 	export class VerticalBlurShader{}
-	export class BloomPass {
-		public static blurX;
-		public static blurY; 
-		constructor(...args: any[])
-	}
 	export class FXAAShader{}
+    export class ShaderPass {
+        public uniforms;
+        public renderToScreen;
+        constructor(...args: any[])
+    }
+    export class RenderPass {
+
+        constructor(...args: any[])
+    }
+    export class BloomPass {
+        public static blurX;
+        public static blurY;
+        public copyUniforms;
+        constructor(strength, kernelSize, sigma, resolution, maskActive)
+    }
 	export class EffectComposer {
+
 		constructor(...args: any[])
 	}
 }
@@ -172,6 +184,81 @@ declare module THREE {
 
 var TheMath = Math;
 module THREE {
+
+    export class Mouse2DControls {
+
+        private _object: THREE.Object3D;
+        private lastPos:THREE.Vector2;
+
+        private _pos: THREE.Vector2;
+        private _currPos: THREE.Vector2;
+
+        private _enabled: boolean;
+
+        constructor(object:THREE.Object3D) {
+            this._object = object;
+
+            this._enabled = false;
+
+            this.lastPos = new THREE.Vector2(0);
+            this._pos = new THREE.Vector2(0);
+            this._currPos = new THREE.Vector2(0);
+
+            document.addEventListener( 'mousedown', this.onMouseDown, false );
+            document.addEventListener( 'mouseup', this.onMouseUp, false );
+            document.addEventListener( 'mousemove', this.onMouseMove, false );
+
+            document.addEventListener( 'touchstart', this.onMouseDown );
+            document.addEventListener( 'touchend', this.onMouseUp );
+            document.addEventListener( 'touchmove', this.onMouseMove );
+        }
+
+        onMouseDown = (event) => {
+            if ( this._enabled === false ) return;
+            var t = (event.touches && event.touches.length > 0) ? event.touches[0] : event;
+            this.lastPos = new THREE.Vector2(t.clientX, t.clientY);
+            (<HTMLElement>document.querySelectorAll("body").item(0)).classList.add("drag");
+        }
+
+        onMouseUp = (event) => {
+            if ( this._enabled === false ) return;
+            (<HTMLElement>document.querySelectorAll("body").item(0)).classList.remove("drag");
+        }
+
+        onMouseMove = (event) => {            
+
+            if ( this._enabled === false ) return;
+
+            var t = (event.touches && event.touches.length > 0) ? event.touches[0] : event;
+
+            
+            this.lastPos.set(t.clientX, t.clientY);
+        }
+
+        transformCoordinates(v:THREE.Vector2):THREE.Vector2 {
+            var hw: number = webglExp.Scene3D.WIDTH * .5;
+            var hh: number = webglExp.Scene3D.HEIGHT * .5; 
+
+            return new THREE.Vector2((v.x - hw) / hw, (v.y - hh) / hh);
+        }
+
+        toggleEnable(b:boolean) {
+            this._enabled = b;
+        }
+
+        render() {
+            if ( this._enabled === false ) return;
+            var coord: THREE.Vector2 = this.transformCoordinates(this.lastPos);
+            this._pos.x += (coord.x - this._pos.x) * 0.1;
+            this._pos.y += (coord.y - this._pos.y) * 0.1;
+
+
+            this._object.rotation.y = this._pos.x;
+            this._object.rotation.x = this._pos.y;
+            // this._object.rotation.x = this._pos.y * (TheMath.PI / 0.0005);
+        }
+    }
+
 	export class MouseControls {
 
 		public enabled;
