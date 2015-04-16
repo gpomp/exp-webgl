@@ -5,8 +5,8 @@ var glslify = require('glslify');
 var pVertex = glslify('./../../shaders/cubeExample/plane/vertex.glsl');
 var pFragment = glslify('./../../shaders/cubeExample/plane/fragment.glsl');
 
-var pcVertex = glslify('./../../shaders/particles_swarm/pointcloud/vertex.glsl');
-var pcFragment = glslify('./../../shaders/particles_swarm/pointcloud/fragment.glsl');
+var pcVertex = glslify('./../../shaders/particlesswarm/pointcloud/vertex.glsl');
+var pcFragment = glslify('./../../shaders/particlesswarm/pointcloud/fragment.glsl');
 
 var cVertex = glslify('./../../shaders/common/copy/vertex.glsl');
 var cFragment = glslify('./../../shaders/common/copy/fragment.glsl');

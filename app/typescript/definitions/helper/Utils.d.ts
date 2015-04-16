@@ -7,6 +7,7 @@ declare module utils {
     class GameKeyBoardControl {
         private _callbackKeyPressed;
         private _callbackKeyUp;
+        private _keyHTML;
         constructor(callbackKeyPressed: Function, callbackKeyUp: Function);
         keydown: (event: KeyboardEvent) => void;
         keyup: (event: KeyboardEvent) => void;

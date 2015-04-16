@@ -14,13 +14,31 @@ module webglExp {
 
 		private callback:Function;
 
+        private _expMenu: HTMLElement;
+        private _expMenuTip: HTMLElement;
+
+
 		constructor(callback:Function) {
 			this.callback = callback;
 			this.siteReady = false;
 			if (webglExp.Detector.isWebGL()) {
 				this.configWebgl();
 			}
+
+            this.configSite();
 		}
+
+        configSite() {
+            this._expMenu = document.getElementById('exp-menu');
+            this._expMenuTip = <HTMLElement>this._expMenu.querySelector('.tip a');
+
+            this._expMenuTip.addEventListener('click', this.toggleMenu);
+        }
+
+        toggleMenu = (event:MouseEvent) => {
+            event.preventDefault();
+            this._expMenu.classList.toggle('show');
+        }
 
 		configWebgl() {
 

@@ -11,6 +11,7 @@
     "glslify": "^2.0.1",
     "gsap": "^1.16.1",
     "gulp": "^3.8.11",
+    "gulp-autoprefixer": "^2.1.0",
     "gulp-compile-handlebars": "^0.4.4",
     "gulp-concat": "^2.5.2",
     "gulp-connect": "^2.2.0",

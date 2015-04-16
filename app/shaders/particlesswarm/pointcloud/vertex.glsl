@@ -9,8 +9,6 @@ uniform int audioData[256];
 uniform float maxAV;
 
 attribute vec3 timeD;
-attribute float delay;
-attribute float dir;
 
 varying vec4 texel;
 varying vec4 stagePos;
@@ -33,13 +31,16 @@ void main() {
     pos.y += sin(cosTime) * (timeD.y);
 
     vUv = vec2((pos.x + 256.0) / 512.0, (pos.y + 256.0) / 512.0);
-    texel = texture2D( text, vUv );
-    float colValue = (texel.x + texel.y + texel.z) / 3.0;
+    texel = vec4(0.0);
+    vec4 t = texture2D( text, vUv );
+
+    float colValue = (t.x + t.y + t.z) / 3.0;
     float angle = 0.0;
     float aPlus = (PI * 2.0) / 160.0;
     float maxDist = 10.0 * 10.0;
 
     float z = 0.0;
+    float maxInArea = 0.0;
     for(int i = 0; i < 160; i++) {
         float currAngle = aPlus * float(i);
         float x = cos(currAngle) * 246.0;
@@ -49,15 +50,18 @@ void main() {
         float distSquare = abs(dx * dx + dy * dy);
 
         float inArea = 1.0 - max(0.0, min(1.0, distSquare / maxDist));
+        maxInArea = max(maxInArea, inArea);
         float aperc = float(audioData[i]);
         texel.rgb += inArea * vec3(currAngle / (PI * 2.0), vUv.y, float(audioData[i]) / maxAV); 
-        z += inArea * (aperc) * 3.2;
+        z += inArea * (aperc) * 4.2;
 
     }
 
+    texel.rgb += t.rgb * (1.0 - maxInArea);
+
     pos.z += z;
 
-    pos.z += -50.0 + colValue * 100.0; 
+    pos.z += (-50.0 + colValue * 100.0) * (1.0 - ceil(maxInArea)); 
  
     stagePos = modelMatrix * vec4(pos,1.0);
   	gl_Position = projectionMatrix *

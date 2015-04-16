@@ -15,7 +15,7 @@ module THREE {
     export class CopyShader {
         static uniforms = {
             "tDiffuse":     { type: "t", value: null },
-            "opacity":     { type: "f", value: 1.0 }
+            "opacity":     { type: "f", value: 0.0 }
 
         }; 
 

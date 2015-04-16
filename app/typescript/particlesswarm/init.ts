@@ -66,7 +66,7 @@ module webglExp {
         canplay = () => {
             // try {
             // Fix up for prefixing
-            window.AudioContext = window.AudioContext||window.webkitAudioContext;
+            window['AudioContext'] = window['AudioContext']||window['webkitAudioContext'];
             this._audioContext = new AudioContext();
             this.getSound();
           /*}
@@ -119,6 +119,9 @@ module webglExp {
     }
 
     export class Swarm extends THREE.Line {
+
+        public static NB_VERTS: number;
+
         private _time: number;
         private _dir: number;
         private _speed: number;
@@ -131,8 +134,9 @@ module webglExp {
         private _shaderMat: THREE.ShaderMaterial;
 
 
-        constructor(geom:THREE.Geometry, mat:THREE.Material, radius:number, dir:number) {
+        constructor(geom:THREE.BufferGeometry, mat:THREE.ShaderMaterial, radius:number, dir:number, nbVertices:number) {
             super(geom, mat);
+            Swarm.NB_VERTS = nbVertices;
             this._dir = dir;
             this._time = 0;
             this._speed = 0.0005 + Math.random() * 0.0005;
@@ -142,17 +146,7 @@ module webglExp {
             this._attributes = {
                 timeD: {
                     type: 'v3',
-                    value: []
-                },
-
-                delay: {
-                    type: 'f',
-                    value: []
-                },
-                
-                dir: {
-                    type: 'f',
-                    value: []
+                    value: null
                 }
             };
 
@@ -183,18 +177,7 @@ module webglExp {
                 }
             };
 
-            var stepAngle: number = (Math.PI * 2) / this.geometry.vertices.length;
-            var angle: number = 0;
-            for (var i = 0; i < this.geometry.vertices.length; ++i) {
-                this._attributes.timeD.value.push(new THREE.Vector3(
-                    Math.random(),
-                    Math.random(),
-                    angle
-                ));
-                angle += stepAngle;
-                this._attributes.delay.value.push(Math.random());
-                this._attributes.dir.value.push((Math.random() > 0.5 ? 1 : -1));
-            }
+            
 
             this._shaderMat = <THREE.ShaderMaterial>mat;
             this._shaderMat.uniforms = this._uniforms;
@@ -254,28 +237,72 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            var geom: THREE.Geometry = new THREE.Geometry();
+            var geom: THREE.BufferGeometry = new THREE.BufferGeometry();
             var w: number = 512;
-            var h: number = 512;
+            var h: number = 512; 
+            var vw: number = 320;
+            var vh: number = 320;
+            var vW1: number = vw + 1;
+            var vH1: number = vh + 1;
             var hw: number = w / 2;
             var hh: number = h / 2;
             var xs: number = -hw;
             var ys: number = -hh;
-            var wSeg: number = w / 320;
-            var hSeg: number = h / 320;
+            var wSeg: number = w / vW1;
+            var hSeg: number = h / vH1;
 
             var dir: number = 1;
 
-            for (var y = 0; y < 320; ++y) {
+            var vertices = new Float32Array( vW1 * vH1 * 3 );
+            var uvs = new Float32Array( vW1 * vH1 * 2 );
+
+
+            var offset = 0;
+            var offset2 = 0;
+
+            for (var y = 0; y < vH1; ++y) {
                 var ypos: number = ys + y * hSeg;
-                for (var x = 0; x < 320; ++x) {
+                for (var x = 0; x < vH1; ++x) {
                     var stx = dir === 1 ? xs : xs + w;
                     var xpos: number = stx + dir * x * wSeg;
-                    geom.vertices.push(new THREE.Vector3(xpos, ypos, 0));
+
+                    vertices[ offset   ] = xpos;
+                    vertices[offset + 1] = ypos;
+
+                    uvs[ offset2     ] = (xpos + hw) / w;
+                    uvs[ offset2 + 1 ] = 1 - ( (ypos + hh) / h );
+
+
+                    offset += 3;
+                    offset2 += 2;
                 }
 
                 dir *= -1;
             }
+
+            var stepAngle: number = (Math.PI * 2) / vertices.length;
+            var angle: number = 0;
+            offset = 0;
+
+            var timeD = new Float32Array( vertices.length * 3 );
+            var delay = new Float32Array( vertices.length * 1 );
+
+            for (var i = 0; i < vertices.length; ++i) {
+
+                timeD[ offset + 0 ] =  Math.random();
+                timeD[ offset + 1 ] =  Math.random();
+                timeD[ offset + 2 ] =  angle;
+                
+                angle += stepAngle;
+
+                offset += 3;
+            }
+
+            geom.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+            geom.addAttribute( 'timeD', new THREE.BufferAttribute( timeD, 3 ) );
+            geom.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+
+            
 
            /* for (var i = 0; i < 100000; ++i) {
                 geom.vertices.push(new THREE.Vector3(0, 0, 0));
@@ -283,7 +310,7 @@ module webglExp {
 
             this._swarmList = [];
             var startRad: number = 400;
-            var dir = 1;
+            var dir = 1; 
             for (var i = 0; i < 1; ++i) {
                 
                 var pcMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
@@ -292,9 +319,9 @@ module webglExp {
                     side: THREE.DoubleSide,
                     transparent:true,
                     blending: THREE.AdditiveBlending 
-                });
+                }); 
 
-                var swarm:webglExp.Swarm = new webglExp.Swarm(geom, pcMat, startRad, dir);
+                var swarm:webglExp.Swarm = new webglExp.Swarm(geom, pcMat, startRad, dir, vertices.length);
                 this._scene.add(swarm);
                 this._swarmList.push(swarm);
                 startRad -= 50;

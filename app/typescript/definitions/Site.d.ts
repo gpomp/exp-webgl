@@ -8,7 +8,11 @@ declare module webglExp {
         private mainScene;
         private siteReady;
         private callback;
+        private _expMenu;
+        private _expMenuTip;
         constructor(callback: Function);
+        configSite(): void;
+        toggleMenu: (event: MouseEvent) => void;
         configWebgl(): void;
         scroll: (event: any) => void;
         checkScrollAnim: () => void;

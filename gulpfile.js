@@ -20,6 +20,7 @@ var     gulp = require('gulp'),
         del = require('del'), 
         debug = require('gulp-debug'),
         insert = require('gulp-insert'),
+        autoprefixer = require('gulp-autoprefixer'),
         runSequence = require('run-sequence').use(gulp),
         rimraf = require('gulp-rimraf');
 
@@ -44,6 +45,10 @@ gulp.task('less', function () {
     gulp.src(config.app + "less/main.less")
         .pipe(plumber())
         .pipe(less().on('error', gutil.log))
+        .pipe(autoprefixer({
+            browsers: ['last 2 versions'],
+            cascade: false
+        }))
         .pipe(gulpif(config.env === 'prod', minifycss()))
         .pipe(gulp.dest(config.dist + "css"));
 });
@@ -95,11 +100,26 @@ gulp.task('handlebars', function() {
 
     var templateData = { template: '' };
 
-    return gulp.src(config.app + 'handlebars/*.handlebars')
+    gulp.src(config.app + 'handlebars/*.handlebars')
     	.pipe(data(function(file) {
             var name = path.basename(file.path, '.handlebars');
-            templateData.template = name;
+            templateData.template = file.filename = name;
+            
+	 	}))
+        .pipe(handlebars(templateData, options))
+		.pipe(rename(function (path) {
+            path.basename = "index";
+        	path.extname = ".html";
+        }))
+        .pipe(gulp.dest(function(file) {
+            return config.dist + file.filename + "/";
+        }));
 
+
+
+    return gulp.src(config.app + 'handlebars/*.handlebars')
+        .pipe(data(function(file) {
+            var name = path.basename(file.path, '.handlebars');
             // Compile corresponding less
             gulp.src(config.app + "less/" + name + "/main.less")
                 .pipe(plumber())
@@ -136,18 +156,9 @@ gulp.task('handlebars', function() {
                                }));
 
             tsResult.dts.pipe(gulp.dest(config.dist + 'js/'));
-            return tsResult.js.pipe(concat('experiment.js'))
+            tsResult.js.pipe(concat('experiment.js'))
                                 .pipe(sourcemaps.write('./typescript'))
                                 .pipe(gulp.dest(config.dist + name + '/js/'));
-	 	}))
-        
-		.pipe(handlebars(templateData, options))
-		.pipe(rename(function (path) {
-            path.basename = "index";
-        	path.extname = ".html";
-        }))
-        .pipe(gulp.dest(function(file) {
-            return config.dist + templateData.template + "/";
         }));
 });
 
