@@ -5,51 +5,59 @@ precision highp float;
 #pragma glslify: noise = require(../../../../node_modules/glsl-noise/classic/2d)
 #pragma glslify: noisep = require(../../../../node_modules/glsl-noise/periodic/2d)
 
+// procedural fBm (p.437)
+float fBm(vec2 p, float H, float lacunarity) {
+	float value = 0.0;
+	for(int i=0;i<6; ++i) {
+		value+= noise(p) * pow(lacunarity, -H*float(i));
+		p*= lacunarity;
+	}
+	return value;
+}
+
 uniform float time;
 uniform float width;
 uniform float height;
 uniform vec2 repeatText;
 uniform vec2 scroll;
 uniform float noisePond;
+uniform float noiseAspPond;
+uniform float heightAspVal;
 uniform float heightVal;
+uniform float avWSeg;
+uniform float avHSeg;
+uniform float uH;
+uniform float uLacunarity;
 
 varying vec4 stagePos;
 varying vec3 pos;
 varying vec3 vNormal;
 varying vec2 vUv;
 
+// Get height at position
 vec3 zAt(vec2 p) {
-	vec2 noisePos = vec2((p.x + scroll.x) / noisePond, (p.y + scroll.y)  / noisePond);
-	vec2 noisePos2 = vec2((p.x + scroll.x + 1.0) / 100.0, (p.y + scroll.y - 1.0)  / 100.0);
-
-	float n = noise(noisePos);
-	float n2 = noise(noisePos2);
-	float z = heightVal * 0.5 + n * heightVal + n2 * 20.0;
-
-	vec3 tempPos = vec3(p.x, p.y, z);
-
-	return tempPos;
+	float x = p.x + scroll.x;
+	float y = p.y + scroll.y;
+	vec2 noisePos = vec2(x / noisePond, y  / noisePond);
+	float n = fBm(noisePos, uH, uLacunarity);
+	return vec3(p.x, p.y, heightVal * 0.5 + n * heightVal);
 }
 
 void main() { 
+	// Scale uv to fit plane
 	vec2 rText = vec2((width) / repeatText.x, (height) / repeatText.y);
 	vUv = (uv + scroll / vec2(width, height)) * rText;
 	pos = zAt(position.xy);
 
-	float small = 0.03;
-	vec2 n1 = vec2(pos.x + small, pos.y);
-	vec3 neigh1 = zAt(n1);
-
-	vec2 n2 = vec2(pos.x, pos.y + small);
-	vec3 neigh2 = zAt(n2);
-
-	vec3 tangeant = neigh1 - pos;
-	vec3 bitangeant = neigh2 - pos;
-	vNormal = normalize(cross(tangeant, bitangeant));
-
-	// pos += pos * (floor((vNormal.x + vNormal.y + vNormal.z) * 10.0) / 10.0) * 0.1;
-
     stagePos = modelMatrix * vec4(pos,1.0);
+
+    // Get average neighbour to get face
+    vec3 n1 = zAt(vec2(pos.x + avWSeg, pos.y));
+    vec3 n2 = zAt(vec2(pos.x, pos.y + avHSeg));
+
+    // Calculate normal from face's tangent/bitangent
+    vNormal = normalize(cross(n1 - pos.xyz, n2 - pos.xyz));
+
   	gl_Position = projectionMatrix *
                 modelViewMatrix *
                 vec4(pos,1.0);  

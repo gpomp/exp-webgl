@@ -32,9 +32,13 @@ module utils {
         private _callbackKeyPressed:Function;
         private _callbackKeyUp:Function;
 
+        private _keyHTML: HTMLElement;
+
         constructor(callbackKeyPressed:Function, callbackKeyUp:Function) {
             this._callbackKeyPressed = callbackKeyPressed;
             this._callbackKeyUp = callbackKeyUp;
+
+            this._keyHTML = <HTMLElement>document.getElementById('keyboard-control');
 
             document.addEventListener('keydown', this.keydown);
             document.addEventListener('keyup', this.keyup);
@@ -65,6 +69,10 @@ module utils {
                 break;
             }
 
+            if(key !== '' && key !== 'enter') {
+                (<HTMLElement>this._keyHTML.querySelector('.' + key)).classList.add('pushed');
+            }
+            
             this._callbackKeyPressed(key);
         }
 
@@ -91,6 +99,10 @@ module utils {
                 case 13:
                     key = 'enter';
                 break;
+            }
+
+            if(key !== '' && key !== 'enter') {
+                (<HTMLElement>this._keyHTML.querySelector('.' + key)).classList.remove('pushed');
             }
 
             this._callbackKeyUp(key);

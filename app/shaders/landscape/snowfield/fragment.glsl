@@ -12,5 +12,6 @@ varying vec3 pos;
 
 void main() { 
 	vec3 flakeColor = texture2D(flake, gl_PointCoord).rgb;
-  	gl_FragColor = vec4(flakeColor, flakeColor.r * 0.75);
+	float alpha = (flakeColor.r + flakeColor.g + flakeColor.b) / 3.0;
+  	gl_FragColor = vec4(flakeColor, alpha * 0.75);
 }

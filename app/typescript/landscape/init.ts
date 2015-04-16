@@ -18,7 +18,11 @@ module webglExp {
 
         private _snowField: THREE.PointCloud;
 
-        constructor(w:number, h:number) {
+        private _gui;
+
+        constructor(w:number, h:number, gui) {
+
+            this._gui = gui;
 
             var flakeTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/flake.jpg');
 
@@ -30,11 +34,23 @@ module webglExp {
                 width: {
                     type: 'f',
                     value: w
-                },  
+                },   
                 height: {
                     type: 'f',
                     value: h
-                }, 
+                },   
+                noiseDivide: {
+                    type: 'f',
+                    value: 600.0
+                },   
+                xWind: {
+                    type: 'f',
+                    value: 400.0
+                },  
+                zWind: {
+                    type: 'f',
+                    value: 350.0
+                },
                 flake: {
                     type: 't',
                     value: flakeTexture
@@ -42,7 +58,8 @@ module webglExp {
                 scroll: {
                     type: 'v2',
                     value: new THREE.Vector2(0, 0)
-                }
+                },
+
             };
             this._attributes = {
                 modValue: {
@@ -50,6 +67,11 @@ module webglExp {
                     value: null
                 }
             };
+
+            var folder = this._gui.addFolder("snow field");
+            folder.add(this._uniforms.noiseDivide, 'value', 100.0, 3000.0).name('noiseDivide');
+            folder.add(this._uniforms.xWind, 'value', 10.0, 400.0).name('xWind');
+            folder.add(this._uniforms.zWind, 'value', 10.0, 400.0).name('yWind');
 
             var geometry: THREE.BufferGeometry = new THREE.BufferGeometry();
             var vPos: number[][] = [];
@@ -78,7 +100,7 @@ module webglExp {
                 vertices[ i*3 + 2 ] = vPos[i][2];
 
                 modValue[ i*2 + 0 ] = 0.3 + Math.floor(Math.random() * 100) / 100;
-                modValue[ i*2 + 1 ] = 400 + Math.random() * 400.0;
+                modValue[ i*2 + 1 ] = 4000 + Math.random() * 400.0;
             }
 
             geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
@@ -91,12 +113,12 @@ module webglExp {
                 uniforms: this._uniforms,
                 attributes: this._attributes,
                 transparent: true,
-                blending: THREE.AdditiveBlending 
+                blending: THREE.AdditiveBlending
             });
 
             this._snowField = new THREE.PointCloud(geometry, snowMat);
 
-            this._snowField.position.y = -500;
+            this._snowField.position.y = 500;
         }
 
         getField():THREE.PointCloud {
@@ -108,7 +130,7 @@ module webglExp {
         }
 
         render() {
-            this._uniforms.time.value += 0.01;
+            this._uniforms.time.value += 0.001;
         }
     }
 
@@ -144,11 +166,18 @@ module webglExp {
         private _snowField: webglExp.SnowField;
 
 
+        private _scrollV:THREE.Vector2;
+        private _scrollPond:THREE.Vector2;
+
+
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
 			super(scene, camera, renderer);
             this._scene = scene;
             this._camera = camera;
             this._renderer = renderer;
+
+            this._scrollV = new THREE.Vector2(0);
+            this._scrollPond = new THREE.Vector2(10, 10);
 
             this._renderer.setClearColor(new THREE.Color(255, 255, 255));
 
@@ -173,6 +202,8 @@ module webglExp {
             crackTexture.wrapS = THREE.RepeatWrapping;
             crackTexture.wrapT = THREE.RepeatWrapping;
 
+            var hFog = h * 0.5;
+
             this._uniforms = {
                 time: {
                     type: 'f',
@@ -186,25 +217,53 @@ module webglExp {
                     type: 'f',
                     value: h
                 },
+                avWSeg: {
+                    type: 'f',
+                    value: 0.0
+                }, 
+                uH: {
+                    type: 'f',
+                    value: 1.4
+                }, 
+                uLacunarity: {
+                    type: 'f',
+                    value: 2.0
+                }, 
+                avHSeg: {
+                    type: 'f',
+                    value: 0.0
+                }, 
                 noisePond: {
                     type: 'f',
-                    value: 1000.0
+                    value: 1141.0
+                },
+                noiseAspPond: {
+                    type: 'f',
+                    value: 153.0
                 },
                 heightVal: {
                     type: 'f',
-                    value: 1000.0
+                    value: 702.0
+                },
+                heightAspVal: {
+                    type: 'f',
+                    value: 69.0
                 },
                 scroll: {
                     type: 'v2',
-                    value: new THREE.Vector2(0)
+                    value: new THREE.Vector2(-300 + Math.random() * 600, -300 + Math.random() * 600)
                 },
                 fogRatio: {
                     type: 'f',
                     value: 0.8
                 },
+                maxDistSquare: {
+                    type: 'f',
+                    value: hFog * hFog + hFog * hFog
+                },
                 light: {
                     type: 'v3',
-                    value: new THREE.Vector3(0.29, -1.0, 1.0)
+                    value: new THREE.Vector3(0.8, 1.0, 1.0)
                 },
                 grass: {
                     type: 't',
@@ -218,6 +277,10 @@ module webglExp {
                     type: 't',
                     value: rockTexture
                 },
+                crackPond: {
+                    type: 'f',
+                    value: 800.0
+                },
                 crack: {
                     type: 't',
                     value: crackTexture
@@ -225,14 +288,28 @@ module webglExp {
                 repeatText: {
                     type: 'v2',
                     value: new THREE.Vector2(256, 256)
+                },
+                noiseFogPond: {
+                    type: 'f',
+                    value: 1000.0
+                },
+                noiseFogAlpha: {
+                    type: 'f',
+                    value: 0.6
                 }
             }
+
+            var groundFolder = this._gui.addFolder('Ground');
+            groundFolder.add(this._uniforms.noisePond, 'value', 600.0, 50000.0).name('noisePond');
+            groundFolder.add(this._uniforms.uH, 'value', 0.0, 2.0).name('uH').step(0.05);
+            groundFolder.add(this._uniforms.uLacunarity, 'value', 0.0, 5.0).name('uLacunarity').step(0.05);
+            groundFolder.add(this._uniforms.heightVal, 'value', 1.0, 4000.0).name('heightVal');
+            groundFolder.add(this._uniforms.crackPond, 'value', 400.0, 1000.0).name('crackPond');
 
              var lightFolder = this._gui.addFolder("Light Position");
              lightFolder.add(this._uniforms.light.value, 'x', -1, 1);
              lightFolder.add(this._uniforms.light.value, 'y', -1, 1);
              lightFolder.add(this._uniforms.light.value, 'z', -1, 1);
-             this._gui.add(this, 'earthQuake');
 
             this._attributes = {
                 
@@ -254,7 +331,7 @@ module webglExp {
             this._ground.position.y = -1000;
             scene.add(this._ground);
 
-            this._snowField = new webglExp.SnowField(w, h);
+            this._snowField = new webglExp.SnowField(w, h, this._gui);
             this._scene.add(this._snowField.getField());
 
             this._camera.position.z = 2500;
@@ -306,21 +383,9 @@ module webglExp {
             }
         }
 
-        earthQuake = () => {
-            this._inEarthQuake = true;
-            this._checkVal = 0;
-            this._checkDir = 1;
-            this._countFrames = 0;
-            TweenLite.to(this, 3, { _checkVal: 1, ease: Sine.easeIn });
-
-            var to: number = this._uniforms.heightVal.value === 1000 ? 2000 : 1000;
-            TweenLite.to(this._uniforms.heightVal, 3, { value: to, ease: Expo.easeInOut, delay: 3 });
-            TweenLite.to(this, 3, { _checkVal: 0, ease: Sine.easeIn, delay: 6, onComplete: this.endEarthQuake });
-        }
-
         createCustomPlaneGeometry(w:number, h:number):THREE.BufferGeometry {
-            var vW: number = 300;
-            var vH: number = 300;
+            var vW: number = 400;
+            var vH: number = 400;
             var vW1: number = vW + 1;
             var vH1: number = vH + 1;
 
@@ -331,6 +396,9 @@ module webglExp {
 
             var wGap: number = w / vW;
             var hGap: number = h / vH;
+
+            this._uniforms.avWSeg.value = wGap * 1.1;
+            this._uniforms.avHSeg.value = hGap * 1.1;
 
             var vertices = new Float32Array( vW1 * vH1 * 3 );
             var uvs = new Float32Array( vW1 * vH1 * 2 );
@@ -391,25 +459,23 @@ module webglExp {
             return planeGeom;
         }
 
-        endEarthQuake = () => {
-            this._inEarthQuake = false;
-        }
 
 
 		render() {
             this._uniforms.time.value += 0.01;
+
+            this._speedX += (this._speedXToGo - this._speedX) * 0.1;
+            this._speedY += (this._speedYToGo - this._speedY) * 0.1;
+
             this._uniforms.scroll.value.y -= this._speedY;
             this._uniforms.scroll.value.x += this._speedX;
 
             this._snowField.setScroll(this._uniforms.scroll.value);
             this._snowField.render();
-
-            this._speedX += (this._speedXToGo - this._speedX) * 0.1;
-            this._speedY += (this._speedYToGo - this._speedY) * 0.1;
             this._camera.rotation.x = this._angleY;
             this._camera.rotation.z = this._angleX;
-            this._angleX += (this._angleXToGo - this._angleX) * 0.3;
-            this._angleY += (this._angleYToGo - this._angleY) * 0.3;
+            this._angleX += (this._angleXToGo - this._angleX) * 0.1;
+            this._angleY += (this._angleYToGo - this._angleY) * 0.1;
 
             if(this._inEarthQuake) {
                 this._camera.position.x = this._checkVal * this._checkDir * 50;
