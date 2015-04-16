@@ -5,6 +5,9 @@ precision highp float;
 uniform float time;
 uniform float radius;
 uniform float aPos;
+uniform vec2 startPos;
+uniform float total;
+uniform float addRadius;
 
 attribute vec2 a;
 attribute float id;
@@ -12,26 +15,45 @@ attribute float departed;
 
 varying vec4 stagePos;
 varying vec3 pos;
-varying vec2 startPos;
 varying vec2 currPos;
+varying float dispRad;
+
+const float M_PI = 3.1415926535897932384626433832795;
+
+vec2 latngFromCoords(vec3 coords) {
+	float lat = acos(coords.y / radius); //theta
+    float lon = atan(coords.x / coords.z); //phi
+    return vec2(lat, lon);
+}
+
+vec3 coordsFromLatLng(vec2 latlng) {
+	float x = dispRad * cos(latlng.x) * cos(latlng.y);
+	float y = dispRad * sin(latlng.x);
+	float z = dispRad * cos(latlng.x) * sin(latlng.y);
+	return vec3(x, y, z);
+}
 
 void main() {
     pos = position;
 
-	float currentAngleX = 	a.y;
+	float idDef = (id) * 0.01;
+	float angleid = id / total * a.y;
+	
+	float modId = mod(id, 2.0);
+	dispRad = radius + time * idDef * 0.1 + (departed * 0.4) * time * modId;
+	float llRad = dispRad - radius;
 
-	float px = cos(aPos) * radius;
-	float py = sin(aPos) * radius;
+	vec2 startLatLng = startPos;
+	startLatLng.x += cos(time * 2.0 + angleid) * ((addRadius + departed * 0.001) * time + llRad * 0.01);
+	startLatLng.y += sin(time * 2.0 + angleid) * ((addRadius + departed * 0.001) * time + llRad * 0.01);
 
-	startPos = vec2(px, py);
+	pos = coordsFromLatLng(startLatLng);
 
-	float idDef = (id + 1.0) * 0.01;
-	pos.x = px + departed * time + cos(aPos) * (40.0 * time) + (cos(aPos + currentAngleX * time) * (10.0 * idDef * time));
-	pos.y = py + departed * time + sin(aPos) * (40.0 * time) + (sin(aPos + currentAngleX * time) * (10.0 * idDef * time));
+	gl_PointSize = 1.0;
 
 	currPos = pos.xy;
 
-    gl_PointSize = 1.0;
+    gl_PointSize = 4.0;
     stagePos = modelMatrix * vec4(pos,1.0);
   	gl_Position = projectionMatrix *
                 modelViewMatrix *

@@ -12,6 +12,19 @@ declare var SHADERLIST;
 
 module THREE {
 
+    export class CopyBloomShader {
+        static uniforms = {
+            "tDiffuse2":     { type: "t", value: null },
+            "tDiffuse3":     { type: "t", value: null },
+            "time":          { type: "f", value: 0.0 }
+
+        };
+
+        static vertexShader = SHADERLIST.copyBloom.vertex;
+
+        static fragmentShader = SHADERLIST.copyBloom.fragment;
+    }
+
     export class GodRayShader {
         static uniforms = {
             "tDiffuse":     { type: "t", value: null }
@@ -25,7 +38,8 @@ module THREE {
 
     export class CopyShader {
         static uniforms = {
-            "tDiffuse":     { type: "t", value: null }
+            "tDiffuse":     { type: "t", value: null },
+            "opacity":     { type: "f", value: 1.0 }
 
         };
 

@@ -62,10 +62,17 @@ module webglExp {
         private _uniforms;
         private _attributes;
 
-        private _pCloud: THREE.PointCloud;
+        private _pCloud: THREE.Line;
 
-        constructor(radius:number) {
+        private _gui;
+
+        private _baseColor: number[];
+
+        constructor(radius:number, gui) {
             this._radius = radius;
+            this._gui = gui;
+
+            this.getColors();
 
             this._uniforms = {
                 time: {
@@ -75,6 +82,14 @@ module webglExp {
                 radius: {
                     type: 'f',
                     value: radius
+                },
+                addRadius: {
+                    type: 'f',
+                    value: 0.0
+                },
+                total: {
+                    type: 'f',
+                    value: ParticleBurst.NB_PARTICLES
                 },
                 aPos: {
                     type: 'f',
@@ -87,8 +102,23 @@ module webglExp {
                 alpha: {
                     type: 'f',
                     value: 0.0
+                },
+                startPos: {
+                    type: 'v2',
+                    value: new THREE.Vector2(0)
+                },
+                baseColor: {
+                    type: 'v3',
+                    value: new THREE.Vector3(this._baseColor[0] / 255, this._baseColor[1] / 255, this._baseColor[2] / 255)
                 }
             };
+            /*var burstFolder = this._gui.addFolder('Bursts');
+            var bCol = burstFolder.addColor(this, '_baseColor');
+            bCol.onChange(function(value) {
+                this._uniforms.baseColor.value.x = value[0] / 255;
+                this._uniforms.baseColor.value.y = value[1] / 255;
+                this._uniforms.baseColor.value.z = value[2] / 255;
+            }.bind(this));*/
 
             this._attributes = {
                 a: {
@@ -147,11 +177,24 @@ module webglExp {
                 uniforms: this._uniforms,
                 attributes: this._attributes,
                 transparent: true,
-                blending: THREE.AdditiveBlending 
+                blending: THREE.AdditiveBlending
             });
 
-            this._pCloud = new THREE.PointCloud(geometry, burstMat);
+            this._pCloud = new THREE.Line(geometry, burstMat);
+            window.setTimeout(function() { this.launch() }.bind(this), Math.floor(Math.random() * 15));
+        }
 
+        setColor() {
+            this.getColors();
+
+            this._uniforms.baseColor.value.set(this._baseColor[0] / 255, this._baseColor[1] / 255, this._baseColor[2] / 255);
+        }
+
+        getColors() {
+            var r = 255;
+            var g = 100 - 50 + Math.random() * 100;
+            var b = Math.max(0, 26 - 50 + Math.random() * 100)
+            this._baseColor = [r, g, b];
         }
 
         getPointCloud():THREE.PointCloud {
@@ -162,19 +205,35 @@ module webglExp {
             this._uniforms.time.value = 0;
             var a:number = Math.random() * (Math.PI * 2);
             this._uniforms.aPos.value = a;
+
+            var lat: number = -1 + 2 * Math.random();
+            var lng: number = (Math.PI * 2) * Math.random();
+
+            this.setColor();
+
+            this._uniforms.startPos.value.set(lat, lng);    
+            this._uniforms.addRadius.value = Math.random() * 0.1;    
             
-            var d: number = Math.random() * 10;
-            var t: number = 10 + Math.random() * 5;
+            var d: number = Math.random() * 20;
+            var t: number = 20 + Math.random() * 10;
 
             TweenLite.to(this._uniforms.time, t, { value: 1.0, onComplete: this.launch, delay: d });
 
-            TweenLite.to(this._uniforms.alpha, 1, { value: 1.0, delay: d });
-            var endAlpha: number = d + t - 3;
-            TweenLite.to(this._uniforms.alpha, 1, { value: 0.0, delay: endAlpha });
+            TweenLite.to(this._uniforms.alpha, 6, { value: 1.0, delay: d });
+            var endAlpha: number = d + t - 6;
+            TweenLite.to(this._uniforms.alpha, 6, { value: 0.0, delay: endAlpha });
         }
 
         render() {
 
+        }
+
+        calcPos(lat:number, lng:number) {
+            this._uniforms.startPos.value.set(
+                this._radius * Math.cos(lat) * Math.sin(lng),
+                this._radius * Math.sin(lat) * Math.sin(lng),
+                this._radius * Math.cos(lng)
+            );
         }
     }
 
@@ -291,12 +350,12 @@ module webglExp {
 
             this._burstList = [];
 
-            /*for (var i = 0; i < 10; ++i) {
-                var pb: webglExp.ParticleBurst = new webglExp.ParticleBurst(Sun.RADIUS);
+            for (var i = 0; i < 10; ++i) {
+                var pb: webglExp.ParticleBurst = new webglExp.ParticleBurst(Sun.RADIUS, this._gui);
                 this._BloomScene.add(pb.getPointCloud());
                 this._burstList.push(pb);
-                pb.launch();
-            }*/
+                
+            }
 
             this._sunRing = new webglExp.SunRing();
             this._scene.add(this._sunRing.getPlane());
@@ -306,25 +365,25 @@ module webglExp {
 		}
 
         setComposers() {
-            // this._composerBloom = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._composerBloom = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
             this._composer = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
             
-            /*var renderTargetParams = {    minFilter: THREE.LinearFilter,
+            var renderTargetParams = {    minFilter: THREE.LinearFilter,
                                         magFilter: THREE.LinearFilter, 
                                         format: THREE.RGBAFormat,
                                         stencilBuffer: true };
 
             var rt:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(Scene3D.WIDTH, Scene3D.HEIGHT, renderTargetParams);
 
-            this._blendComposer = new THREE.EffectComposer(this._renderer, rt);*/
+            this._blendComposer = new THREE.EffectComposer(this._renderer, rt);
         }
 
         setComposerPasses() {
-            /*var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0);
-           
+            var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
+            renderPass['clear'] = false;
             this._bloomStrength = 7;
             this._effectBloom = new THREE.BloomPass(this._bloomStrength, 20, 8.0, 1024, true);
-            this._blurh = 1.3;
+            this._blurh = 0.1;
  
             var composerFolder = this._gui.addFolder('Composer');
 
@@ -342,26 +401,26 @@ module webglExp {
             THREE.BloomPass.blurX = new THREE.Vector2( this._blurh / (Scene3D.WIDTH * 2), 0.0 );
             THREE.BloomPass.blurY = new THREE.Vector2( 0.0, this._blurh / (Scene3D.HEIGHT * 2) );
 
-            this._composerBloom.addPass(renderPass);
-            this._composerBloom.addPass(this._effectBloom);*/
-            
-            var renderPass = new THREE.RenderPass(this._scene, this._camera);
-            var godPass = new THREE.ShaderPass(<any>THREE.GodRayShader);
-            godPass.renderToScreen = true;
-
             var copyPass = new THREE.ShaderPass(<any>THREE.CopyShader);
-            copyPass.renderToScreen = true;
+            // copyPass.renderToScreen = true;
+   
+            this._composerBloom.addPass(renderPass);
+            // this._composerBloom.addPass(this._effectBloom); 
             
-            this._composer.addPass(renderPass);
-            this._composer.addPass(copyPass); 
+            var renderPass2 = new THREE.RenderPass(this._scene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
+            /*var godPass = new THREE.ShaderPass(<any>THREE.GodRayShader);
+            godPass.renderToScreen = true;*/
+            
+            this._composer.addPass(renderPass2);
+            // this._composer.addP    ss(copyPass); 
 
 
-            /*this._blendPass = new THREE.ShaderPass( <any>THREE.BlendShader );
-            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse3"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
+            this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse3"].value = this._composerBloom.getComposer().renderTarget2;
             this._blendPass.renderToScreen = true;
 
-            this._blendComposer.addPass(this._blendPass);*/
+            this._blendComposer.addPass(this._blendPass);
         }
 
 
@@ -369,24 +428,26 @@ module webglExp {
             this._uniforms.time.value += 0.01;
 
             this._sunRing.render();
-            this._composer.getComposer().render();
+            // this._composer.getComposer().render();
 
-            /*this._composerBloom.getComposer().render();
+            this._blendPass.uniforms["time"].value += 0.02;
+
+            this._composerBloom.getComposer().render();
             this._composer.getComposer().render();
-            this._blendComposer.render();*/
+            this._blendComposer.render();
 
 			super.render();
 		}
 
         resize() {
             this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
-          /*  this._composerBloom.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._composerBloom.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
 
 
-            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse3"].value = this._composer.getComposer().renderTarget2;*/
+           this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse3"].value = this._composerBloom.getComposer().renderTarget2;
             super.resize();
         }
 	}

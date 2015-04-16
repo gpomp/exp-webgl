@@ -11,6 +11,9 @@ var bFragment = glslify('./../../shaders/sun/burst/fragment.glsl');
 var rVertex = glslify('./../../shaders/sun/ring/vertex.glsl');
 var rFragment = glslify('./../../shaders/sun/ring/fragment.glsl');
 
+var cbVertex = glslify('./../../shaders/sun/copyBloom/vertex.glsl');
+var cbFragment = glslify('./../../shaders/sun/copyBloom/fragment.glsl');
+
 var gVertex = glslify('./../../shaders/common/godRay/vertex.glsl');
 var gFragment = glslify('./../../shaders/common/godRay/fragment.glsl');
 
@@ -40,5 +43,9 @@ window['SHADERLIST'] = {
     copy: {
         vertex: cVertex,
         fragment: cFragment
+    },
+    copyBloom: {
+        vertex: cbVertex,
+        fragment: cbFragment
     }
 }
