@@ -22,21 +22,20 @@ void main() {
 	// vec4 texel3 = texture2D( tDiffuse3, vvUv );
 	
 	vec4 finalt2 = texture2D( tDiffuse2, vvUv );
-	vec4 finalt3 = texture2D( tDiffuse3, vvUv );
+	// vec4 finalt3 = texture2D( tDiffuse3, vvUv );
 	float k = 0.001;
 	float sc = 2.0 * k;
 	float divide = 0.0;
 	for(float i = 0.0; i < 4.0; i++) {
 		vec2 disp = vec2(-sc + (float(i) + 1.0) * k);
 		float perc = (1.0 - (float(i) + 1.0) / 4.0);
-		finalt2.rgb += texture2D( tDiffuse2, vvUv + disp).rgb;
-		finalt3.rgb += texture2D( tDiffuse3, vvUv + disp).rgb;
+		finalt2 += texture2D( tDiffuse2, vvUv + disp);
+		// finalt3.rgb += texture2D( tDiffuse3, vvUv + disp).rgb;
 		divide += perc;
 	}
 
-	finalt2.rgb = finalt2.rgb / (4.0);
-	finalt3.rgb = finalt3.rgb / (4.0);
+	// finalt3.rgb = finalt3.rgb / (4.0);
 
   	// gl_FragColor = mix(finalt2, finalt3, finalt3.a);
-  	gl_FragColor = finalt2 + vec4((vec3(1.0) - finalt2.rgb) * finalt3.rgb, finalt3.a);
+  	gl_FragColor = finalt2 / (5.0);
 }

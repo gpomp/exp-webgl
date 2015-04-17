@@ -8,6 +8,7 @@ uniform float aPos;
 uniform vec2 startPos;
 uniform float total;
 uniform float addRadius;
+uniform vec2 scroll;
 
 attribute vec2 a;
 attribute float id;
@@ -43,7 +44,7 @@ void main() {
 	dispRad = radius + time * idDef * 0.1 + (departed * 0.4) * time * modId;
 	float llRad = dispRad - radius;
 
-	vec2 startLatLng = startPos;
+	vec2 startLatLng = startPos + scroll * 0.03;
 	startLatLng.x += cos(time * 2.0 + angleid) * ((addRadius + departed * 0.001) * time + llRad * 0.01);
 	startLatLng.y += sin(time * 2.0 + angleid) * ((addRadius + departed * 0.001) * time + llRad * 0.01);
 

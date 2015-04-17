@@ -58,9 +58,13 @@ module webglExp {
 
             this._pos = new THREE.Vector2((512 - 640) * 0.5, (512 - 360) * 0.5);
 
-            this._videoEl.oncanplay = function() { this.drawCanvas(); }.bind(this);
+            // this._videoEl.oncanplay = function() { this.drawCanvas(); }.bind(this); 
 
-            // this._videoEl.addEventListener('play', this.drawCanvas);
+            this._videoEl.addEventListener('canplay', this.drawCanvas);
+
+            if (this._videoEl.readyState > 3) {
+                this.drawCanvas();
+            }
         }
 
         canplay = () => {

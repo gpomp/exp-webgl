@@ -34,9 +34,7 @@ module webglExp {
                 fragmentShader: SHADERLIST.ring.fragment,
                 side: THREE.DoubleSide,
                 uniforms: this._uniforms,
-                attributes: this._attributes,
-                transparent: true,
-                blending: THREE.AdditiveBlending 
+                attributes: this._attributes
             });
 
             this._plane = new THREE.Mesh(pGeom, ringMat);
@@ -53,7 +51,7 @@ module webglExp {
 
     export class ParticleBurst {
 
-        static NB_PARTICLES: number = 600;
+        static NB_PARTICLES: number = 1000;
 
         private _radius: number;
 
@@ -90,6 +88,10 @@ module webglExp {
                 total: {
                     type: 'f',
                     value: ParticleBurst.NB_PARTICLES
+                },
+                scroll: {
+                    type: 'v2',
+                    value: new THREE.Vector2(0)
                 },
                 aPos: {
                     type: 'f',
@@ -181,7 +183,10 @@ module webglExp {
             });
 
             this._pCloud = new THREE.Line(geometry, burstMat);
-            window.setTimeout(function() { this.launch() }.bind(this), Math.floor(Math.random() * 15));
+        }
+
+        start(delay:number) {
+            window.setTimeout(function() { this.launch(); }.bind(this), delay);
         }
 
         setColor() {
@@ -217,15 +222,15 @@ module webglExp {
             var d: number = Math.random() * 20;
             var t: number = 20 + Math.random() * 10;
 
-            TweenLite.to(this._uniforms.time, t, { value: 1.0, onComplete: this.launch, delay: d });
+            TweenLite.to(this._uniforms.time, t, { value: 1.0, delay: d });
 
             TweenLite.to(this._uniforms.alpha, 6, { value: 1.0, delay: d });
             var endAlpha: number = d + t - 6;
-            TweenLite.to(this._uniforms.alpha, 6, { value: 0.0, delay: endAlpha });
+            TweenLite.to(this._uniforms.alpha, 6, { value: 0.0, delay: endAlpha, onComplete: this.launch });
         }
 
-        render() {
-
+        render(time:number) {
+            this._uniforms.scroll.value.y = time;
         }
 
         calcPos(lat:number, lng:number) {
@@ -352,9 +357,9 @@ module webglExp {
 
             for (var i = 0; i < 10; ++i) {
                 var pb: webglExp.ParticleBurst = new webglExp.ParticleBurst(Sun.RADIUS, this._gui);
-                this._BloomScene.add(pb.getPointCloud());
+                this._scene.add(pb.getPointCloud());
                 this._burstList.push(pb);
-                
+                pb.start((Math.floor((i / 10) * 5) + Math.random() * 2) * 1000);
             }
 
             this._sunRing = new webglExp.SunRing();
@@ -417,7 +422,6 @@ module webglExp {
 
             this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
             this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse3"].value = this._composerBloom.getComposer().renderTarget2;
             this._blendPass.renderToScreen = true;
 
             this._blendComposer.addPass(this._blendPass);
@@ -426,6 +430,12 @@ module webglExp {
 
 		render() {
             this._uniforms.time.value += 0.01;
+
+            for (var i = 0; i < this._burstList.length; ++i) {
+                this._burstList[i].render(this._uniforms.time.value);
+            }
+
+            
 
             this._sunRing.render();
             // this._composer.getComposer().render();
@@ -442,12 +452,10 @@ module webglExp {
         resize() {
             this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._composerBloom.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
-            this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
 
 
            this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse3"].value = this._composerBloom.getComposer().renderTarget2;
             super.resize();
         }
 	}
