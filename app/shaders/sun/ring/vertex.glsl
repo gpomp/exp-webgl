@@ -7,8 +7,10 @@ attribute float frac;
 
 varying vec4 stagePos;
 varying vec3 pos;
+varying vec2 vUv;
 
 void main() {
+	vUv = uv;
     pos = position;
     stagePos = modelMatrix * vec4(pos,1.0);
   	gl_Position = projectionMatrix *

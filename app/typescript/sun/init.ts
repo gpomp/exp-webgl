@@ -15,20 +15,38 @@ module webglExp {
         private _uniforms;
         private _attributes;
 
-        constructor() {
+        private rayCanvas: HTMLCanvasElement;
+        private rayCtx: CanvasRenderingContext2D;
+
+        private rayList: THREE.Vector4[];
+        private _angleChange: number;
+
+        private _radius: number;
+
+
+
+        constructor(radius:number) {
+            this._radius = radius;
+            this.setCanvas();
+
+            this.setRays();
 
             this._uniforms = {
                 time: {
                     type: 'f',
                     value: 0
-                }
+                },
+                sunRays: {
+                    type: "t",
+                    value: new THREE.Texture(this.rayCanvas)
+                },
             }
 
             this._attributes = {
                 
             }
 
-            var pGeom: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+            var pGeom: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(1024, 1024);
             var ringMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
                 vertexShader: SHADERLIST.ring.vertex,
                 fragmentShader: SHADERLIST.ring.fragment,
@@ -40,12 +58,99 @@ module webglExp {
             this._plane = new THREE.Mesh(pGeom, ringMat);
         }
 
+        setCanvas() {
+            this.rayCanvas = document.createElement('canvas');
+            this.rayCanvas.setAttribute("width", "1024px");
+            this.rayCanvas.setAttribute("height", "1024px");
+            this.rayCtx = this.rayCanvas.getContext('2d');
+            /*this.rayCanvas.classList.add("canvas");
+            (<HTMLElement>document.querySelector("body")).appendChild(this.rayCanvas);*/
+        }
+
+        setRays() {
+            this.rayList = [];
+
+            for (var i = 0; i < 200; ++i) {
+                this.rayList.push(new THREE.Vector4(
+                    1 + Math.random() * 12,
+                    this._radius + 50 + Math.random() * 200,
+                    -1 + Math.random() * 2,
+                    Math.random() * 50
+                ));
+            }
+
+            this._angleChange = (Math.PI * 2) / this.rayList.length;
+        }
+
         getPlane():THREE.Mesh {
             return this._plane;
         }
 
         render() {
             this._uniforms.time.value += 0.01;
+
+            this.rayCtx.clearRect(0, 0, this.rayCanvas.width, this.rayCanvas.height);
+            
+
+            var hw: number = this.rayCanvas.width * 0.5;
+            var hh: number = this.rayCanvas.height * 0.5;
+
+            var p1: THREE.Vector2 = new THREE.Vector2();
+            var p2: THREE.Vector2 = new THREE.Vector2();
+            var p3: THREE.Vector2 = new THREE.Vector2();
+
+
+            for (var i = 0; i < this.rayList.length; ++i) {
+                var r: THREE.Vector4 = this.rayList[i];
+                this.rayCtx.beginPath();
+
+                var cTime = (Math.cos(this._uniforms.time.value * 0.1 + r.w) + 1) * 0.5;
+
+                var rayWidth: number = cTime * r.x;
+
+                var xa: number = i * this._angleChange + r.z * this._uniforms.time.value * 0.03;
+                var aperp: number = xa + Math.PI / 4;
+
+                var x: number = Math.cos(xa);
+                var y: number = Math.sin(xa);
+
+                p1.set(    hw + x * this._radius - rayWidth * Math.cos(aperp), 
+                           hh + y * this._radius - rayWidth * Math.sin(aperp) );
+
+                p2.set(    hw + x * this._radius + rayWidth * Math.cos(aperp), 
+                           hh + y * this._radius + rayWidth * Math.sin(aperp) );
+
+                p3.set(    hw + x * r.y, 
+                           hh + y * r.y );
+
+                this.rayCtx.moveTo(p1.x, p1.y);
+                this.rayCtx.lineTo(p2.x, p2.y);
+                this.rayCtx.lineTo(p3.x, p3.y);
+                this.rayCtx.lineTo(p1.x, p1.y);
+                this.rayCtx.closePath();
+
+                this.rayCtx.lineWidth = r.x;
+                this.rayCtx.fillStyle = "rgba(255, 255, 255, " + (cTime * 0.1) + ")";
+                this.rayCtx.fill();
+            }
+
+            var rad: number = this._radius;
+            var alpha: number = 1;
+
+            var lineWidth = 10;
+
+            for (var i = 0; i < 6; ++i) {
+                var invI: number = 1 - i / 6;
+                this.rayCtx.lineWidth = lineWidth * invI;
+                this.rayCtx.beginPath();
+
+                this.rayCtx.arc(hw, hh, rad + invI * lineWidth, 0, 2 * Math.PI, false);
+                this.rayCtx.closePath();
+                this.rayCtx.strokeStyle = "rgba(255, 255, 255, " + (alpha * invI) + ")";
+                this.rayCtx.stroke();
+            }
+
+            this._uniforms.sunRays.value.needsUpdate = true;
         }
     }
 
@@ -197,8 +302,8 @@ module webglExp {
 
         getColors() {
             var r = 255;
-            var g = 100 - 50 + Math.random() * 100;
-            var b = Math.max(0, 26 - 50 + Math.random() * 100)
+            var g = 200 + Math.random() * 100;
+            var b = Math.max(0, 126 + Math.random() * 100)
             this._baseColor = [r, g, b];
         }
 
@@ -268,6 +373,7 @@ module webglExp {
         private _blendPass: THREE.ShaderPass;
 
         private _baseColor: number[];
+        private _middleColor: number[];
         private _topColor: number[];
 
 
@@ -281,8 +387,9 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            this._baseColor = [255, 59, 13];
-            this._topColor = [255, 255, 255];
+            this._baseColor = [187, 97, 1];
+            this._middleColor = [177, 121, 49];
+            this._topColor = [237, 181, 67];
 
             var bumpTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/sun/bump.jpg');
             bumpTexture.wrapS = THREE.RepeatWrapping;
@@ -307,6 +414,10 @@ module webglExp {
                     type: 'v3',
                     value: new THREE.Vector3(this._topColor[0] / 255, this._topColor[1] / 255, this._topColor[2] / 255)
                 },
+                middleColor: {
+                    type: 'v3',
+                    value: new THREE.Vector3(this._middleColor[0] / 255, this._middleColor[1] / 255, this._middleColor[2] / 255)
+                },
                 bump: {
                     type: 't',
                     value: bumpTexture
@@ -327,11 +438,17 @@ module webglExp {
 
             var colFolder = this._gui.addFolder("sphere color");
             var bCol = colFolder.addColor(this, '_baseColor');
+            var mCol = colFolder.addColor(this, '_middleColor');
             var tCol = colFolder.addColor(this, '_topColor');
             bCol.onChange(function(value) {
                 this._uniforms.baseColor.value.x = value[0] / 255;
                 this._uniforms.baseColor.value.y = value[1] / 255;
                 this._uniforms.baseColor.value.z = value[2] / 255;
+            }.bind(this));
+            mCol.onChange(function(value) {
+                this._uniforms.middleColor.value.x = value[0] / 255;
+                this._uniforms.middleColor.value.y = value[1] / 255;
+                this._uniforms.middleColor.value.z = value[2] / 255;
             }.bind(this));
             tCol.onChange(function(value) {
                 this._uniforms.topColor.value.x = value[0] / 255;
@@ -359,10 +476,10 @@ module webglExp {
                 var pb: webglExp.ParticleBurst = new webglExp.ParticleBurst(Sun.RADIUS, this._gui);
                 this._scene.add(pb.getPointCloud());
                 this._burstList.push(pb);
-                pb.start((Math.floor((i / 10) * 5) + Math.random() * 2) * 1000);
+                pb.start((Math.floor((i / 10) * 2) + Math.random() * 2) * 1000);
             }
 
-            this._sunRing = new webglExp.SunRing();
+            this._sunRing = new webglExp.SunRing(Sun.RADIUS);
             this._scene.add(this._sunRing.getPlane());
 
             this.setComposers();
