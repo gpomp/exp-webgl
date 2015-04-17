@@ -58,12 +58,13 @@ module webglExp {
 
             this._pos = new THREE.Vector2((512 - 640) * 0.5, (512 - 360) * 0.5);
 
+            this._videoEl.oncanplay = function() { this.drawCanvas(); }.bind(this);
 
-
-            this._videoEl.addEventListener('play', this.drawCanvas);
+            // this._videoEl.addEventListener('play', this.drawCanvas);
         }
 
         canplay = () => {
+            console.log('canplay!');
             // try {
             // Fix up for prefixing
             window['AudioContext'] = window['AudioContext']||window['webkitAudioContext'];
@@ -76,6 +77,7 @@ module webglExp {
         }
 
         getSound() {
+            console.log('getSound');
             var source = this._audioContext.createMediaElementSource(this._videoEl);
 
             this._analyser = this._audioContext.createAnalyser();
@@ -292,7 +294,7 @@ module webglExp {
                 timeD[ offset + 0 ] =  Math.random();
                 timeD[ offset + 1 ] =  Math.random();
                 timeD[ offset + 2 ] =  angle;
-                
+
                 angle += stepAngle;
 
                 offset += 3;
