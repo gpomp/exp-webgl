@@ -301,9 +301,9 @@ module webglExp {
         }
 
         getColors() {
-            var r = 255;
-            var g = 200 + Math.random() * 100;
-            var b = Math.max(0, 126 + Math.random() * 100)
+            var r = 230 + Math.random() * 10;
+            var g = 115 + Math.random() * 10;
+            var b = 26  + Math.random() * 10;
             this._baseColor = [r, g, b];
         }
 
@@ -387,9 +387,9 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            this._baseColor = [187, 97, 1];
-            this._middleColor = [177, 121, 49];
-            this._topColor = [237, 181, 67];
+            this._baseColor = [255, 40, 1];
+            this._middleColor = [255, 221, 49];
+            this._topColor = [230, 115, 26];
 
             var bumpTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/sun/bump.jpg');
             bumpTexture.wrapS = THREE.RepeatWrapping;
@@ -472,12 +472,12 @@ module webglExp {
 
             this._burstList = [];
 
-            for (var i = 0; i < 10; ++i) {
+           /* for (var i = 0; i < 10; ++i) {
                 var pb: webglExp.ParticleBurst = new webglExp.ParticleBurst(Sun.RADIUS, this._gui);
                 this._scene.add(pb.getPointCloud());
                 this._burstList.push(pb);
                 pb.start((Math.floor((i / 10) * 2) + Math.random() * 2) * 1000);
-            }
+            }*/
 
             this._sunRing = new webglExp.SunRing(Sun.RADIUS);
             this._scene.add(this._sunRing.getPlane());

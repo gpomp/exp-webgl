@@ -47,7 +47,7 @@ void main() {
         coords += 0.5;
 		ray += texture2D(sunRays, coords).rgb * vec3((i + 1.0) / 3.0);
 	}
-
+	ray /= 3.0;
 	// 
   	gl_FragColor = vec4(baseColor * d * 2.0 + baseColor * vec3(c * 0.1) + vec3(ray.r * 0.9, ray.g * 0.45, ray.b * 0.1), 1.0);
 }
