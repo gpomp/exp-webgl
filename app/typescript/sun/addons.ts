@@ -16,7 +16,9 @@ module THREE {
         static uniforms = {
             "tDiffuse2":     { type: "t", value: null },
             "tDiffuse3":     { type: "t", value: null },
-            "time":          { type: "f", value: 0.0 }
+            "time":          { type: "f", value: 0.0 },
+            "quality":       { type: "f", value: 0.0 },
+            "size":          { type: "v2", value: null }
 
         };
 

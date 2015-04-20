@@ -8,8 +8,34 @@ precision highp float;
 uniform sampler2D tDiffuse2;
 uniform sampler2D tDiffuse3;
 uniform float time;
+uniform float quality;
+uniform vec2 size;
 
 varying vec2 vUv;
+
+const float M_PI = 3.1415926535897932384626433832795;
+
+const int samples = 9; // pixels per axis; higher = bigger glow, worse performance
+const int diff = 4; 
+
+ 
+vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
+{
+  	vec4 source = texture2D(tex, tc);
+  	vec4 sum = vec4(0);
+  	vec2 sizeFactor = vec2(1) / size * quality;
+  
+  	for (int x = -diff; x <= diff; x++)
+  	{
+    	for (int y = -diff; y <= diff; y++)
+    	{
+      		vec2 offset = vec2(float(x), float(y)) * sizeFactor;
+      		sum += texture2D(tex, tc + offset) * 0.6;
+    	}
+  	}
+  
+  	return ((sum / (float(samples) * float(samples))) + source) * colour;
+}
 
 void main() {
 	vec2 displacement = vUv - vec2(0.5);
@@ -18,24 +44,6 @@ void main() {
 
 	vec2 vvUv = vec2(vUv.x + displacement.y * 0.015, vUv.y - displacement.x * 0.015);
 	
-	// vec4 texel2 = texture2D( tDiffuse2, vvUv );
-	// vec4 texel3 = texture2D( tDiffuse3, vvUv );
-	
-	vec4 finalt2 = texture2D( tDiffuse2, vvUv );
-	// vec4 finalt3 = texture2D( tDiffuse3, vvUv );
-	float k = 0.001;
-	float sc = 2.0 * k;
-	float divide = 0.0;
-	for(float i = 0.0; i < 4.0; i++) {
-		vec2 disp = vec2(-sc + (float(i) + 1.0) * k);
-		float perc = (1.0 - (float(i) + 1.0) / 4.0);
-		finalt2 += texture2D( tDiffuse2, vvUv + disp);
-		// finalt3.rgb += texture2D( tDiffuse3, vvUv + disp).rgb;
-		divide += perc;
-	}
-
-	// finalt3.rgb = finalt3.rgb / (4.0);
-
-  	// gl_FragColor = mix(finalt2, finalt3, finalt3.a);
-  	gl_FragColor = finalt2 / (5.0);
+	vec4 glow = effect(vec4(1.0, 0.86666666666666666666666666666667, 0.1921568627450980392156862745098, 1.0), tDiffuse2, vvUv);
+  	gl_FragColor = glow;
 }

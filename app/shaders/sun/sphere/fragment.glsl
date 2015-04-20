@@ -40,10 +40,10 @@ void main() {
 	float brightnessBase = max(0.0, noise(noisePos));
 
 	vec3 noisemiddlePos = vec3(t - pos.x, pos.y + t * 0.5, pos.z + t);
-	float brightnessMiddle = abs(max(0.0, min(1.0, fBm(noisemiddlePos * (2.0 + sin(time) * 0.1), 0.4, 0.33) * 0.01)));
+	float brightnessMiddle = abs(max(0.0, min(1.0, fBm(noisemiddlePos * (2.0 + sin(time * 3.0) * 0.1), 0.4, 0.33) * 0.01)));
 
 	vec3 noise3dPos = vec3((pos.x), (pos.y), pos.z);
-	float brightnessTop = max(0.0, min(1.0, fBm(noise3dPos * (1.0 + cos(time * 0.1) * 0.4), 1.0, 0.4) * 0.03));
+	float brightnessTop = max(0.0, min(1.0, fBm(noise3dPos * (1.0 + cos(time * 0.2) * 0.4), 1.0, 0.4) * 0.03));
 	//brightnessBase = floor(brightnessBase * 5.0) / 5.0;
 	//  * (brightnessBase) + tColor.b * brightnessTop
 	vec3 bottomCol = baseColor * bumpColor;

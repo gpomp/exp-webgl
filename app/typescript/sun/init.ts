@@ -360,6 +360,8 @@ module webglExp {
 
         private _uniforms;
 
+        private _quality: number;
+
         private _burstList: webglExp.ParticleBurst[];
         private _sunRing: webglExp.SunRing;
 
@@ -387,7 +389,7 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            this._baseColor = [255, 40, 1];
+            this._baseColor = [205, 31, 1];
             this._middleColor = [255, 221, 49];
             this._topColor = [230, 115, 26];
 
@@ -536,9 +538,11 @@ module webglExp {
             this._composer.addPass(renderPass2);
             // this._composer.addP    ss(copyPass); 
 
-
             this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
             this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["size"].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._blendPass.uniforms["quality"].value = 3.5;
+            composerFolder.add(this._blendPass.uniforms["quality"], 'value', 0.00, 10.00).name('quality');
             this._blendPass.renderToScreen = true;
 
             this._blendComposer.addPass(this._blendPass);
