@@ -15,11 +15,6 @@ varying vec4 stagePos;
 varying vec3 pos;
 varying vec2 vUv;
 
-float insideBox(vec2 v, vec2 bottomLeft, vec2 topRight) {
-    vec2 s = step(bottomLeft, v) - step(topRight, v);
-    return s.x * s.y;   
-}
-
 void main() {
 
     pos = position;
@@ -39,29 +34,30 @@ void main() {
     float aPlus = (PI * 2.0) / 160.0;
     float maxDist = 10.0 * 10.0;
 
-    float z = 0.0;
-    float maxInArea = 0.0;
-    for(int i = 0; i < 160; i++) {
-        float currAngle = aPlus * float(i);
-        float x = cos(currAngle) * 246.0;
-        float y = sin(currAngle) * 246.0;
-        float dx = x - position.x;
-        float dy = y - position.y;
-        float distSquare = abs(dx * dx + dy * dy);
+    float texAngle = atan(pos.y, pos.x);
 
-        float inArea = 1.0 - max(0.0, min(1.0, distSquare / maxDist));
-        maxInArea = max(maxInArea, inArea);
-        float aperc = float(audioData[i]);
-        texel.rgb += inArea * vec3(currAngle / (PI * 2.0), vUv.y, float(audioData[i]) / maxAV); 
-        z += inArea * (aperc) * 4.2;
+    float x = cos(texAngle) * 246.0;
+    float y = sin(texAngle) * 246.0;
 
-    }
+    float percAngle = (PI + texAngle) / ( 2.0 * PI);
 
-    texel.rgb += t.rgb * (1.0 - maxInArea);
+    float dx = x - pos.x;
+    float dy = y - pos.y;
+    float distSquare = abs(dx * dx + dy * dy);
+    float inArea = 1.0 - max(0.0, min(1.0, distSquare / maxDist));
+
+    int soundPos = int(percAngle * 160.0);
+    float aData = float(audioData[soundPos]);
+
+    texel.rgb += inArea * vec3(percAngle, 1.0 - percAngle, aData / maxAV); 
+    
+    float z = inArea * (aData * 4.2);
+
+    texel.rgb += t.rgb * (1.0 - inArea);
 
     pos.z += z;
 
-    pos.z += (-50.0 + colValue * 100.0) * (1.0 - ceil(maxInArea)); 
+    pos.z += (-50.0 + colValue * 100.0) * (1.0 - ceil(inArea)); 
  
     stagePos = modelMatrix * vec4(pos,1.0);
   	gl_Position = projectionMatrix *
