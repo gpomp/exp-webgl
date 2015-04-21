@@ -23,16 +23,16 @@
 
 </head>
 <body class="{{ template }}">
-
+   
 	<div id="exp-menu">
 		<div class="menu-ctn">
 			<div class="table">
 				<div class="table-cell">
 					<h2>All Experiments</h2>
 					<ul>
-						<li><a href="/sun/">Sun</a></li>
-						<li><a href="/particlesswarm/">Music + Video - 1</a></li> 
-						<li><a href="/landscape/">Snowy Landscape</a></li>
+						{{> menuButton url="/sun/" label="Sun"}}
+						{{> menuButton url="/particlesswarm/" label="Music + Video - 1"}}
+						{{> menuButton url="/landscape/" label="Snowy Landscape"}}
 					</ul>
 				</div>
 			</div>

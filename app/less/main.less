@@ -43,6 +43,13 @@ body {
 	}
 }
 
+.button-delay-loop(@n, @i: 0) when (@i =< @n) {
+	&:nth-child(@{i}) {
+		transition-delay: @i / 20 * 1s;
+	}
+	.button-delay-loop(@n, (@i + 1));
+}
+
 #exp-menu {
 	position: absolute;
 	left: 0;
@@ -77,6 +84,16 @@ body {
 		border-right: 5px solid white;
 		z-index: 2;
 		background:black;
+
+		h2 {
+			color: white;
+			font-size: 200%;
+			margin: 0;
+			padding: 0;
+			margin-bottom: 20px;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
 	}
 	ul {
 		margin: 0;
@@ -91,13 +108,56 @@ body {
 
 			a {
 				padding: 20px 10px;
-				color: white;
 				display: block;
 				width: 100%;
 				text-decoration: none;
 				text-transform: uppercase;
 				font-size: 140%;
 				font-weight: 700;
+				position: relative;
+				overflow: hidden;
+
+				.bg {
+					position: absolute;
+					top: 0;
+					left: -10%;
+					z-index: 1;
+					width: 120%;
+					height: 100%;
+
+					div {
+						transform: skewX(20deg) scale(0, 1);
+						width: 50px;
+						height: 100%;
+						background: white;
+						float: left;
+						transition: transform 0.1s ease-in;
+						transform-origin: 0 50%;
+						.button-delay-loop(7);
+					}
+				}
+
+				.label {
+					position: relative;
+					z-index: 2;
+					color: white;
+					transition: color 0.3s ease-in;
+				}
+
+				&:hover {
+					.bg {
+						div {
+							transform: skewX(20deg) scale(1.01, 1);
+							transition: transform 0.1s ease-out;
+							.button-delay-loop(7);
+						}
+					}
+
+					.label {
+						transition: color 0.3s ease-out;
+						color: black;
+					}
+				}
 			}
 		}
 	}
