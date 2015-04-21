@@ -49,15 +49,11 @@ void main() {
     int soundPos = int(percAngle * 160.0);
     float aData = float(audioData[soundPos]);
 
-    texel.rgb += inArea * vec3(percAngle, 1.0 - percAngle, aData / maxAV); 
-    
-    float z = inArea * (aData * 4.2);
+    texel.rgb += inArea * vec3(percAngle, 1.0 - percAngle, aData / maxAV);
 
     texel.rgb += t.rgb * (1.0 - inArea);
 
-    pos.z += z;
-
-    pos.z += (-50.0 + colValue * 100.0) * (1.0 - ceil(inArea)); 
+    pos.z = inArea * (aData * 4.2) + (-50.0 + colValue * 100.0) * (1.0 - ceil(inArea));
  
     stagePos = modelMatrix * vec4(pos,1.0);
   	gl_Position = projectionMatrix *

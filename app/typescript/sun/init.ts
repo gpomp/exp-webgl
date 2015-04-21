@@ -87,7 +87,7 @@ module webglExp {
         }
 
         render() {
-            this._uniforms.time.value += 0.01;
+            this._uniforms.time.value += 0.05;
 
             this.rayCtx.clearRect(0, 0, this.rayCanvas.width, this.rayCanvas.height);
             
@@ -389,9 +389,9 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            this._baseColor = [205, 31, 1];
-            this._middleColor = [255, 221, 49];
-            this._topColor = [230, 115, 26];
+            this._baseColor = [162, 31, 17];
+            this._middleColor = [255, 255, 255];
+            this._topColor = [40, 25, 13];
 
             var bumpTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/sun/bump.jpg');
             bumpTexture.wrapS = THREE.RepeatWrapping;
@@ -406,7 +406,11 @@ module webglExp {
             this._uniforms = {
                 time: {
                     type: 'f',
-                    value: 0
+                    value: Math.random() * 10000
+                },
+                speedNoise: {
+                    type: 'f',
+                    value: 0.3
                 },
                 baseColor: {
                     type: 'v3',
@@ -437,6 +441,9 @@ module webglExp {
                     value: Sun.RADIUS
                 }
             }
+
+            var sphereFolder = this._gui.addFolder("sphere");
+            sphereFolder.add(this._uniforms.speedNoise, 'value', 0.1, 3.0).name('speedNoise').step(0.05);
 
             var colFolder = this._gui.addFolder("sphere color");
             var bCol = colFolder.addColor(this, '_baseColor');
@@ -505,8 +512,8 @@ module webglExp {
         setComposerPasses() {
             var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
             renderPass['clear'] = false;
-            this._bloomStrength = 7;
-            this._effectBloom = new THREE.BloomPass(this._bloomStrength, 20, 8.0, 1024, true);
+            this._bloomStrength = 10000;
+            this._effectBloom = new THREE.BloomPass(this._bloomStrength, 1000, 500.0, 512, true);
             this._blurh = 0.1;
  
             var composerFolder = this._gui.addFolder('Composer');
@@ -536,6 +543,7 @@ module webglExp {
             godPass.renderToScreen = true;*/
             
             this._composer.addPass(renderPass2);
+            // this._composer.addPass(this._effectBloom); 
             // this._composer.addP    ss(copyPass); 
 
             this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );

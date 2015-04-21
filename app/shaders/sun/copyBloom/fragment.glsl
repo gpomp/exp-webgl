@@ -30,7 +30,7 @@ vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
     	for (int y = -diff; y <= diff; y++)
     	{
       		vec2 offset = vec2(float(x), float(y)) * sizeFactor;
-      		sum += texture2D(tex, tc + offset) * 0.6;
+      		sum += texture2D(tex, tc + offset);
     	}
   	}
   
