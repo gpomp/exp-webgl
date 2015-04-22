@@ -2,6 +2,7 @@
 /// <reference path="../definitions/core/GLAnimation.d.ts" />
 /// <reference path="../definitions/Site.d.ts" />
 /// <reference path="../definitions/helper/ThreeAddOns.d.ts" />
+/// <reference path="../definitions/helper/Utils.d.ts" />
 /// <reference path="../definitions/core/EffectComposer.d.ts" />
 /// <reference path="../definitions/core/Scene3D.d.ts" />
 /// <reference path="addons.ts" />
@@ -13,116 +14,7 @@ declare var SHADERLIST;
   
 module webglExp {
  
-    export class Video2Canvas {
-
-        public isDrawing: boolean;
-
-        private _canvas: HTMLCanvasElement;
-        private _context;
-
-        private _videoEl: HTMLVideoElement;
-        private _pos: THREE.Vector2;
-
-        public dataArray;
-        public dArray;
-        public audioLoaded;
-        public maxAudioV: number;
-        
-        private _bufferLength;
-        private _analyser;
-        private _audioContext;
-        private _tempArray;
-
-        private _audioCallback: Function;
-
-        constructor(audioCallback:Function) {
-            this._audioCallback = audioCallback;
-            this.dArray = [];
-            this._tempArray = [];
-            this.maxAudioV = 0;
-            for (var i = 0; i < 256; ++i) {
-                this.dArray.push(i);
-                this._tempArray.push(i);
-            }
-
-
-            this.isDrawing = false;
-
-            this._canvas = document.createElement('canvas');
-            this._context = this._canvas.getContext('2d');
-
-            this._canvas.setAttribute("width", "512px");
-            this._canvas.setAttribute("height", "512px");
-
-            this._videoEl = <HTMLVideoElement>document.getElementById('video');
-
-            this._pos = new THREE.Vector2((512 - 640) * 0.5, (512 - 360) * 0.5);
-
-            // this._videoEl.oncanplay = function() { this.drawCanvas(); }.bind(this); 
-
-            this._videoEl.addEventListener('canplay', this.drawCanvas);
-
-            if (this._videoEl.readyState > 3) {
-                this.drawCanvas();
-            }
-        }
-
-        canplay = () => {
-            console.log('canplay!');
-            // try {
-            // Fix up for prefixing
-            window['AudioContext'] = window['AudioContext']||window['webkitAudioContext'];
-            this._audioContext = new AudioContext();
-            this.getSound();
-          /*}
-          catch(e) {
-            alert('Web Audio API is not supported in this browser');
-          }*/
-        }
-
-        getSound() {
-            console.log('getSound');
-            var source = this._audioContext.createMediaElementSource(this._videoEl);
-
-            this._analyser = this._audioContext.createAnalyser();
-            this._analyser.fftSize = 2048; 
-            this._bufferLength = this._analyser.frequencyBinCount;
-            this.dataArray = new Uint8Array(this._bufferLength);
-            this._analyser.getByteFrequencyData(this.dataArray);
-
-            source.connect(this._analyser);
-            this._analyser.connect(this._audioContext.destination);
-
-            this._audioCallback();
-
-            this.audioLoaded = true;
-
-            this._videoEl.play();
-        }
-
-        drawCanvas = () => {
-            this.isDrawing = true;
-            this.canplay();
-            
-        }
-
-        getCanvas():HTMLCanvasElement {
-            return this._canvas;
-        }
-
-        render() {
-            this._context.drawImage(this._videoEl, this._pos.x, this._pos.y, 640, 360);
-            if(this.audioLoaded) {
-                this._analyser.getByteFrequencyData(this.dataArray);
-                this.maxAudioV = 0;
-                for (var i = 0; i < this.dArray.length; i ++) {
-                    this.dArray[i] += (Math.abs(this.dataArray[i * 4] - this._tempArray[i]) - this.dArray[i]) * 0.3;
-                    this.maxAudioV = Math.max(this.maxAudioV, this.dArray[i]);
-                    this._tempArray[i] = this.dataArray[i * 4]; 
-                }
-            }
-        }
-    }
+    
 
     export class Swarm extends THREE.Line {
 
@@ -135,7 +27,7 @@ module webglExp {
         private _uniforms;
         private _attributes;
 
-        private v2c: webglExp.Video2Canvas;
+        private v2c: utils.Video2Canvas;
 
         private _shaderMat: THREE.ShaderMaterial;
 
@@ -147,7 +39,7 @@ module webglExp {
             this._time = 0;
             this._speed = 0.0005 + Math.random() * 0.0005;
 
-            this.v2c = new webglExp.Video2Canvas(this.audioLoaded);
+            this.v2c = new utils.Video2Canvas(this.audioLoaded);
 
             this._attributes = {
                 timeD: {
