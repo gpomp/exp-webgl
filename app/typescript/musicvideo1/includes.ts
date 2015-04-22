@@ -2,11 +2,8 @@
 
 var glslify = require('glslify');
 
-var pVertex = glslify('./../../shaders/cubeExample/plane/vertex.glsl');
-var pFragment = glslify('./../../shaders/cubeExample/plane/fragment.glsl');
-
-var pcVertex = glslify('./../../shaders/particlesswarm/pointcloud/vertex.glsl');
-var pcFragment = glslify('./../../shaders/particlesswarm/pointcloud/fragment.glsl');
+var pcVertex = glslify('./../../shaders/musicvideo1/pointcloud/vertex.glsl');
+var pcFragment = glslify('./../../shaders/musicvideo1/pointcloud/fragment.glsl');
 
 var cVertex = glslify('./../../shaders/common/copy/vertex.glsl');
 var cFragment = glslify('./../../shaders/common/copy/fragment.glsl');
@@ -17,10 +14,6 @@ window['THREE']['BloomPass'] = BloomPass;
 
 
 window['SHADERLIST'] = {
-    plane: {
-        vertex: pVertex,
-        fragment: pFragment
-    },
     pointcloud: {
         vertex: pcVertex,
         fragment: pcFragment

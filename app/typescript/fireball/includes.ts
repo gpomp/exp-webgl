@@ -2,17 +2,17 @@
 
 var glslify = require('glslify');
 
-var sVertex = glslify('./../../shaders/sun/sphere/vertex.glsl');
-var sFragment = glslify('./../../shaders/sun/sphere/fragment.glsl');
+var sVertex = glslify('./../../shaders/fireball/sphere/vertex.glsl');
+var sFragment = glslify('./../../shaders/fireball/sphere/fragment.glsl');
 
-var bVertex = glslify('./../../shaders/sun/burst/vertex.glsl');
-var bFragment = glslify('./../../shaders/sun/burst/fragment.glsl');
+var bVertex = glslify('./../../shaders/fireball/burst/vertex.glsl');
+var bFragment = glslify('./../../shaders/fireball/burst/fragment.glsl');
 
-var rVertex = glslify('./../../shaders/sun/ring/vertex.glsl');
-var rFragment = glslify('./../../shaders/sun/ring/fragment.glsl');
+var rVertex = glslify('./../../shaders/fireball/ring/vertex.glsl');
+var rFragment = glslify('./../../shaders/fireball/ring/fragment.glsl');
 
-var cbVertex = glslify('./../../shaders/sun/copyBloom/vertex.glsl');
-var cbFragment = glslify('./../../shaders/sun/copyBloom/fragment.glsl');
+var cbVertex = glslify('./../../shaders/fireball/copyBloom/vertex.glsl');
+var cbFragment = glslify('./../../shaders/fireball/copyBloom/fragment.glsl');
 
 var gVertex = glslify('./../../shaders/common/godRay/vertex.glsl');
 var gFragment = glslify('./../../shaders/common/godRay/fragment.glsl');
