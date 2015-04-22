@@ -211,7 +211,7 @@ module webglExp {
         }
     }
 
-	export class ParticleSwarm extends webglExp.GLAnimation {
+	export class MusicVideo1 extends webglExp.GLAnimation {
         private _scene: THREE.Scene;
         private _camera: THREE.PerspectiveCamera;
         private _renderer: THREE.WebGLRenderer;
@@ -420,7 +420,7 @@ module webglExp {
 }
 
 var siteReady = function(scene3d:webglExp.Scene3D) {
-	var anim = new webglExp.ParticleSwarm(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
+	var anim = new webglExp.MusicVideo1(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
 	scene3d.setAnim(anim);
 }
 

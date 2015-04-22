@@ -8,7 +8,7 @@ declare var SHADERLIST;
 
 module webglExp {
 
-    export class SunRing {
+    export class BallRing {
 
         private _plane: THREE.Mesh;
 
@@ -347,7 +347,7 @@ module webglExp {
         }
     }
 
-	export class Sun extends webglExp.GLAnimation {
+	export class FireBall extends webglExp.GLAnimation {
         static RADIUS: number = 250;
 
         private _scene: THREE.Scene;
@@ -363,7 +363,7 @@ module webglExp {
         private _quality: number;
 
         private _burstList: webglExp.ParticleBurst[];
-        private _sunRing: webglExp.SunRing;
+        private _sunRing: webglExp.BallRing;
 
         private _composerBloom:webglExp.EffectComposer;
         private _composer:webglExp.EffectComposer;
@@ -401,7 +401,7 @@ module webglExp {
             crackTexture.wrapS = THREE.RepeatWrapping;
             crackTexture.wrapT = THREE.RepeatWrapping;
 
-            var perimeter = 2 * Math.PI * Sun.RADIUS;
+            var perimeter = 2 * Math.PI * FireBall.RADIUS;
 
             this._uniforms = {
                 time: {
@@ -438,7 +438,7 @@ module webglExp {
                 },
                 radius: {
                     type: 'f',
-                    value: Sun.RADIUS
+                    value: FireBall.RADIUS
                 }
             }
 
@@ -472,7 +472,7 @@ module webglExp {
                 side:THREE.DoubleSide,
                 uniforms: this._uniforms
             })
-            var sphereGeom: THREE.SphereGeometry = new THREE.SphereGeometry(Sun.RADIUS, 20, 20);
+            var sphereGeom: THREE.SphereGeometry = new THREE.SphereGeometry(FireBall.RADIUS, 20, 20);
             this._sphere = new THREE.Mesh(sphereGeom, planeMat);
             scene.add(this._sphere);
             camera.lookAt(this._sphere.position);
@@ -488,7 +488,7 @@ module webglExp {
                 pb.start((Math.floor((i / 10) * 2) + Math.random() * 2) * 1000);
             }*/
 
-            this._sunRing = new webglExp.SunRing(Sun.RADIUS);
+            this._sunRing = new webglExp.BallRing(FireBall.RADIUS);
             this._scene.add(this._sunRing.getPlane());
 
             this.setComposers();
@@ -591,7 +591,7 @@ module webglExp {
 }
 
 var siteReady = function(scene3d:webglExp.Scene3D) {
-	var anim = new webglExp.Sun(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
+	var anim = new webglExp.FireBall(scene3d.getScene(), scene3d.getCamera(), scene3d.getRenderer());
 	scene3d.setAnim(anim);
 }
 
