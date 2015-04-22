@@ -11,6 +11,7 @@ var     gulp = require('gulp'),
         iconfontCss = require('gulp-iconfont-css'),
         less = require('gulp-less'),
         tsify = require('tsify'),
+        streamify = require('gulp-streamify'),
         tsc = require('gulp-typescript'),
         sourcemaps = require('gulp-sourcemaps'),
         uglify = require('gulp-uglify'),
@@ -91,7 +92,8 @@ gulp.task('base-code', function() {
 
     tsResult.dts.pipe(gulp.dest(config.app + 'typescript/definitions/'));
     return tsResult.js.pipe(concat('base-3d.js'))
-                        .pipe(sourcemaps.write('./typescript'))
+                        .pipe(gulpif(config.env === 'prod', uglify({mangle: true, compress : {drop_console:true}})))
+                        .pipe(gulpif(config.env === 'dev', sourcemaps.write('./typescript')))
                         .pipe(gulp.dest(config.dist + 'js/'));
 });
 
@@ -104,7 +106,7 @@ gulp.task('base-includes', function() {
 
     return bundler.bundle()
         .pipe(source('global-vendors.js'))
-        .pipe(plumber())
+        .pipe(gulpif(config.env === 'prod', streamify(uglify({mangle: true, compress : {drop_console:true}}))))
         .pipe(gulp.dest(config.dist + 'js/'));
 });
 
@@ -164,7 +166,7 @@ gulp.task('handlebars', function() {
 
             bundler.bundle()
                 .pipe(source('includes.js'))
-                .pipe(plumber())
+                .pipe(gulpif(config.env === 'prod', streamify(uglify({mangle: true, compress : {drop_console:true}}))))
                 .pipe(gulp.dest(config.dist + name + '/js/'));
 
             // Compile local scripts
@@ -185,7 +187,8 @@ gulp.task('handlebars', function() {
 
             tsResult.dts.pipe(gulp.dest(config.dist + 'js/'));
             tsResult.js.pipe(concat('experiment.js'))
-                                .pipe(sourcemaps.write('./typescript'))
+                                .pipe(gulpif(config.env === 'prod', uglify({mangle: true, compress : {drop_console:true}})))
+                                .pipe(gulpif(config.env === 'dev', sourcemaps.write('./typescript')))
                                 .pipe(gulp.dest(config.dist + name + '/js/'));
         }));
 });
