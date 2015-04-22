@@ -60,7 +60,7 @@ body {
 	z-index: 2;
 	height: 100%;
 
-	transform: translate(-295px, 0);
+	transform: translate(-296px, 0);
 
 	transition: transform 0.3s ease-in;
 
@@ -70,8 +70,8 @@ body {
 
 		.tip {
 			a {
-				.symbol:before {
-					content: '<';
+				span {
+					.icon(point-down);
 				}
 			}
 		}
@@ -83,7 +83,6 @@ body {
 		position: relative;
 
 		border-right: 5px solid white;
-		z-index: 2;
 		background:rgba(0, 0, 0, 0.85);
 		body.black & {
 			background:rgba(255, 255, 255, 0.85);
@@ -245,46 +244,81 @@ body {
 
 	.tip {
 		position: absolute;
-		right: -20px;
+		right: -131px;
 		top: 0;
 		height: 100%;
+		overflow: hidden;
+		pointer-events: none;
+		z-index: 2;
 		a {
+			pointer-events: all;
 			display: block;
-			border-radius: 50%;
-			width: 50px;
-			height: 50px;
-			color: white;
+			color: black;
 			text-decoration: none;
 			background:white;
-			transition: transform 0.15s ease-in;
+			border: 5px solid transparent;
+			position: relative;
+			overflow: hidden;
 			body.black & {
 				background: black;
+				color: white;
 			}
 
-			.symbol {
+			transform: rotate(90deg);
+			transition: all 0.2s ease-in-out;
+			font-size: 160%;
+			text-transform: uppercase;
+			font-weight: 600;
+
+			.bg-expand {
+				position: absolute;
+				top: 0;
+				left: 0;
 				width: 100%;
-				font-size: 160%;
-				font-weight: 900;
-				text-align: right;
-				padding-right: 9px;
-				color: black;
+				height: 100%;
+				background: black;
+				transform-origin: 0 100%;
+				transform: translate(0, 100%);
+				transition: transform 0.2s ease-in-out;
 				body.black & {
-					color: white;
+					background: white;
 				}
-				transition: padding 0.15s ease-in;
-				&:before {
-					content: '>';
+			}
+
+			.content-expand {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				padding: 5px 10px 5px 10px;
+			}
+			span {
+				display: inline-block;
+				.icon(point-up);
+				transform: translate(0, 0);
+				&:first-child {
+					margin-right: 3px;
+				}
+				&:last-child {
+					margin-left: 3px;
 				}
 			}
 
 			&:hover {
-				transition: transform 0.15s ease-out;
-				transform: translate(5px, 0);
-				.symbol {
-					padding-right: 11px;
-					transition: padding 0.15s ease-out;
+				transition: all 0.2s ease-in-out;
 
+				color: white;
+				border-color: white;
+				body.black & {
+					border-color: black;
+					color: black;
 				}
+
+				.bg-expand {
+					transform: translate(0, 0);
+					transition: transform 0.2s ease-in-out;
+				}
+
+				
 			}
 		}
 	}
@@ -297,11 +331,11 @@ body {
 	width: 100%;
 	padding: 0 20px;
 	color: white;
+	z-index: 5;
 	body.black & {
 		color: black;
 	}
 	&.show {
-		z-index: 5;
 		.infos {
 			#show-infos {
 				span.icon-info {
@@ -322,8 +356,9 @@ body {
 	.infos {
 		float: left;
 		z-index: 3;
-
+		pointer-events: none;
 		#show-infos {
+			pointer-events: all;
 			position: relative;
 			display: block;
 			font-size: 200%;
@@ -382,6 +417,7 @@ body {
 	}
 
 	.credits {
+		pointer-events: all;
 		position: absolute;
 		right: 20px;
 		bottom: 0;
@@ -403,6 +439,7 @@ body {
 	width: 100%;
 	height: 110px;
 	overflow: hidden;
+	pointer-events: none;
 	& > div {
 		width: 50px;
 		height: 50px;
