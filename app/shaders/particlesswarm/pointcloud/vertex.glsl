@@ -5,7 +5,7 @@ precision highp float;
 uniform float time;
 uniform float radius;
 uniform sampler2D text;
-uniform int audioData[256];
+uniform int audioData[160];
 uniform float maxAV;
 
 attribute vec3 timeD;
