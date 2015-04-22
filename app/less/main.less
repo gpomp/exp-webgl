@@ -1,3 +1,5 @@
+@import "generated/glyph.less"; 
+
 html {
 	height: 100%;
 	width: 100%;
@@ -55,7 +57,6 @@ body {
 	left: 0;
 	top: 0;
 	width: 300px;
-	background:black;
 	z-index: 2;
 	height: 100%;
 
@@ -83,7 +84,11 @@ body {
 
 		border-right: 5px solid white;
 		z-index: 2;
-		background:black;
+		background:rgba(0, 0, 0, 0.85);
+		body.black & {
+			background:rgba(255, 255, 255, 0.85);
+			border-color: black;
+		}
 
 		h2 {
 			color: white;
@@ -93,18 +98,31 @@ body {
 			margin-bottom: 20px;
 			font-weight: 900;
 			text-transform: uppercase;
+			body.black & {
+				color: black;
+			}
 		}
 	}
 	ul {
 		margin: 0;
 		padding: 0;
 		border-top: 1px solid white;
+
+		body.black & {
+			border-color: black;
+		}
 		li {
 			margin: 0;
 			padding: 0;
 			display: block;
 			list-style: none;
 			border-bottom: 1px solid white;
+			background: black;
+
+			body.black & {
+				border-color: black;
+				background: white;
+			}
 
 			a {
 				padding: 20px 10px;
@@ -126,14 +144,18 @@ body {
 					height: 100%;
 
 					div {
-						transform: skewX(20deg) scale(0, 1);
-						width: 50px;
+						transform: skewX(20deg);
+						width: 0;
 						height: 100%;
 						background: white;
 						float: left;
-						transition: transform 0.1s ease-in;
+						transition: width 0.2s ease-in;
 						transform-origin: 0 50%;
-						.button-delay-loop(7);
+
+
+						body.black & {
+							background: black;
+						}
 					}
 				}
 
@@ -141,21 +163,80 @@ body {
 					position: relative;
 					z-index: 2;
 					color: white;
-					transition: color 0.3s ease-in;
+					transform: translate(0, 0);
+					transition: all 0.3s ease-in;
+					padding-left: 30px;
+
+					body.black & {
+						color: black;
+					}
+
+					.icons {
+						position: absolute;
+						left: 0;
+						top: 0;
+						color: white;
+						transition: color 0.05s linear 0.05s;
+
+						body.black & {
+							color: black;
+						}
+						span {
+							position: absolute;
+							top: 0;
+							left: 0;
+							display: inline-block;
+
+							&.icon-plus {
+								transform: rotate(0deg);
+								opacity: 1;
+								transition: all 0.6s ease-in;
+							}
+
+							&.icon-minus {
+								opacity: 0;
+								transition: all 0.6s ease-out;
+							}
+						}
+					}
 				}
 
-				&:hover {
+				&.active, &:hover {
 					.bg {
 						div {
-							transform: skewX(20deg) scale(1.01, 1);
-							transition: transform 0.1s ease-out;
-							.button-delay-loop(7);
+							width: 100%;
+							transform: skewX(20deg);
+							transition: width 0.2s ease-out;
 						}
 					}
 
 					.label {
-						transition: color 0.3s ease-out;
+						transform: translate(10px, 0);
+						transition: all 0.3s ease-out;
 						color: black;
+
+						body.black & {
+							color: white;
+						}
+
+						.icons { 
+							color: black;
+							transition: color 0.05s linear;
+
+							body.black & {
+								color: white;
+							}
+							span.icon-plus {
+								transform: rotate(90deg);
+								opacity: 0;
+								transition: all 0.6s ease-out;
+							}
+
+							span.icon-minus {
+								opacity: 1;
+								transition: all 0.6s ease-out;
+							}
+						}
 					}
 				}
 			}
@@ -176,6 +257,9 @@ body {
 			text-decoration: none;
 			background:white;
 			transition: transform 0.15s ease-in;
+			body.black & {
+				background: black;
+			}
 
 			.symbol {
 				width: 100%;
@@ -184,6 +268,9 @@ body {
 				text-align: right;
 				padding-right: 9px;
 				color: black;
+				body.black & {
+					color: white;
+				}
 				transition: padding 0.15s ease-in;
 				&:before {
 					content: '>';
@@ -210,15 +297,100 @@ body {
 	width: 100%;
 	padding: 0 20px;
 	color: white;
+	body.black & {
+		color: black;
+	}
+	&.show {
+		z-index: 5;
+		.infos {
+			#show-infos {
+				span.icon-info {
+				
+					opacity: 0;
+					transform: rotate(-45deg);
+					transition: all 0.25s ease-in-out;
+				}
+
+				span.icon-close {
+					opacity: 1;
+					transform: rotate(0deg);
+					transition: all 0.25s ease-in-out;
+				}
+			}
+		}
+	}
 	.infos {
 		float: left;
+		z-index: 3;
+
+		#show-infos {
+			position: relative;
+			display: block;
+			font-size: 200%;
+			color: white;
+			background: black;
+			text-decoration: none;
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			border: 5px solid white;
+			text-align: center;
+			body.black & {
+				color: black;
+				background: white;
+				border-color: black;
+			}
+
+			.icon-ctn {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+			}
+
+			span {
+				display: block;
+			}
+
+			span.icon-info {
+
+				opacity: 1;
+				transform: rotate(0deg);
+				transition: all 0.25s ease-in-out;
+			}
+
+			span.icon-close {
+				opacity: 0;
+				transform: rotate(45deg);
+				transition: all 0.25s ease-in-out;
+				&:before {
+					vertical-align: bottom;
+				}
+			}
+
+			&:hover {
+				color: black;
+				background: white;
+			}
+
+			body.black &:hover {
+				color: white;
+				background: black;
+			}
+		}
 	}
 
 	.credits {
-		float: right;
+		position: absolute;
+		right: 20px;
+		bottom: 0;
 		font-size: 120%;
 		a {
 			color: white;
+			body.black & {
+				color: black;
+			}
 		}
 	}
 }
@@ -235,8 +407,14 @@ body {
 		width: 50px;
 		height: 50px;
 		border-radius: 10px;
-		border: 1px solid #999;
+		border: black;
 		position: absolute;
+		text-align: center;
+		background: white;
+		span {
+			font-size: 140%;
+			display: block;
+		}
 
 		&.up {
 			top:0;
@@ -257,8 +435,156 @@ body {
 		}
 
 		&.pushed {
-			background: #999;
+			background: black;
+			border-color: white;
+			span {
+				color: white;
+			}
 		}
+	}
+}
+
+#project-infos {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 3;
+	overflow: hidden;
+	visibility: hidden;
+	transition: visibility 0.1s 4s;
+
+	&.show {
+		visibility: visible;
+		transition: visibility 0.1s;
+		.bg {
+			width: 120%;
+			transition: width 0.6s ease-in-out;
+
+			&.bg-2 {
+				transition: width 0.5s ease-in-out 0.1s;
+			}
+		}
+
+		.project-content {
+			.project-bg {
+				height: 100%;
+				transition: height 0.5s ease-in-out 0.25s;
+			}
+
+			.project-text {
+				visibility: visible;
+				opacity: 1;
+				transition: all 0.25s ease-in-out 0.5s;
+			}
+		}
+	}
+
+	.bg {
+		position: absolute;
+		top: 0;
+		left: -10%;
+		width: 0%;
+		height: 100%;
+		z-index: 1;
+		background: rgba(200, 200, 200, 0.7);
+
+		transform: skewX(20deg);
+
+		body.black & {
+			background: rgba(55, 55, 55, 0.7);
+		}
+
+		transition: width 0.7s ease-in-out 0.3s;
+
+		&.bg-2 {
+			transition: width 0.5s ease-in-out 0.5s;
+		}
+	}
+
+	.project-content {
+		width: 100%;
+		max-width: 1100px;
+		min-height: 100%;
+		margin: 0 auto;	
+		
+		position: relative;
+		z-index: 2;
+		color: black;
+		.project-bg {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 0;
+			z-index: 1;
+			background: rgba(0, 0, 0, 0.8);
+			transition: height 0.5s ease-in-out 0.25s;
+			body.black & {
+				background: rgba(255, 255, 255, 0.6);
+			}
+		}
+		.project-text {
+			width: 100%;
+			padding: 50px 25px;
+			position: relative;
+			z-index: 2;
+			visibility: hidden;
+			opacity: 0;
+			transition: all 0.5s ease-in-out;
+			color: white;
+			body.black & {
+				color: black;
+			}
+			a {
+				color: white;
+				text-decoration: none;
+				display: inline-block;
+				padding-bottom: 1px;
+				border-bottom: 1px solid white;
+				body.black & {
+					color: black;
+					border-color: black;
+				}
+
+				&:hover, body.black &:hover {
+					border-color: transparent;
+				}
+			}
+
+			h1 {
+				font-size: 400%;
+				text-transform: uppercase;
+				font-weight: 900;
+				margin: 0;
+				padding: 0;
+				margin-bottom: 40px;
+				letter-spacing: 0.05em;
+			}
+
+			h3 {
+				font-size: 200%;
+				text-transform: uppercase;
+				font-weight: 600;
+				margin: 0;
+				padding: 0;
+				margin-top: 10px;
+				margin-bottom: 20px;
+				letter-spacing: 0.05em;
+			}
+
+			p {
+				margin: 0;
+				padding: 0;
+				margin-bottom: 10px;
+				font-size: 140%;
+				display: block;
+				letter-spacing: 0.05em;
+				line-height: 130%;
+			}
+		}
+		
 	}
 }
 

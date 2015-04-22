@@ -7,6 +7,8 @@ var     gulp = require('gulp'),
         source = require('vinyl-source-stream'),
         browserify = require('browserify'),
         plumber = require('gulp-plumber'),
+        iconfont = require('gulp-iconfont'),
+        iconfontCss = require('gulp-iconfont-css'),
         less = require('gulp-less'),
         tsify = require('tsify'),
         tsc = require('gulp-typescript'),
@@ -39,6 +41,24 @@ gulp.task('connect', function() {
     livereload: true,
     host: '0.0.0.0'
   });
+});
+
+// Glyphs
+var fontName = 'glyph';
+gulp.task('font', function(){
+    return gulp.src(config.app + 'assets/glyph/*.svg')
+        .pipe(iconfontCss({
+            fontName: fontName,
+            path: 'node_modules/gulp-iconfont-css/templates/_icons.less',
+            targetPath: '../../app/less/generated/glyph.less',
+            fontPath: '../fonts/'
+        }))
+        .pipe(iconfont({
+            fontName: fontName,
+            normalize:true,
+            fontHeight: 1001
+        }))
+        .pipe(gulp.dest(config.dist+'fonts/'));
 });
 
 gulp.task('less', function () {
@@ -95,7 +115,15 @@ gulp.task('base-js', function() {
 gulp.task('handlebars', function() {
     var options = {
         ignorePartials: true,
-        batch : [config.app + 'handlebars/partials']
+        batch : [config.app + 'handlebars/partials'],
+        helpers : {
+            ifCond: function(v1, v2, options) {
+              if(v1 === v2) {
+                return options.fn(this);
+              }
+              return options.inverse(this);
+}
+            }
     }
 
     var templateData = { template: '' };
@@ -163,6 +191,10 @@ gulp.task('handlebars', function() {
 });
 
 gulp.task('watch', function () {
+
+    // FONT
+    gulp.watch(config.app + "assets/glyph/*.svg", ['font', 'less']);
+
     // LESS
     gulp.watch(config.app + "less/*.less", ['less']);
     gulp.watch(config.app + "less/**/*.less", ['handlebars']);
@@ -188,7 +220,7 @@ gulp.task('devconfig', function () {
 });
 
 gulp.task('common', function(callback) {
-    runSequence( 'base-js', ['less', 'handlebars'] );
+    runSequence( 'base-js', 'font', ['less', 'handlebars'] );
 });
 
 gulp.task('dev',['devconfig', 'common', 'connect', 'watch']);

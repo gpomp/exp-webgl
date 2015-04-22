@@ -10,9 +10,13 @@ declare module webglExp {
         private callback;
         private _expMenu;
         private _expMenuTip;
+        private _showInfoBtn;
+        private _infos;
+        private _footer;
         constructor(callback: Function);
         configSite(): void;
         toggleMenu: (event: MouseEvent) => void;
+        toggleInfo: (event: MouseEvent) => void;
         configWebgl(): void;
         scroll: (event: any) => void;
         checkScrollAnim: () => void;

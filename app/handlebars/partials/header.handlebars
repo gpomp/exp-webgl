@@ -22,17 +22,17 @@
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.js"></script>
 
 </head>
-<body class="{{ template }}">
-   
-	<div id="exp-menu">
+<body class="{{ template }} {{ bodyClass }}">
+     
+	<div id="exp-menu"> 
 		<div class="menu-ctn">
 			<div class="table">
 				<div class="table-cell">
 					<h2>All Experiments</h2>
 					<ul>
-						{{> menuButton url="/sun/" label="Sun"}}
-						{{> menuButton url="/particlesswarm/" label="Music + Video - 1"}}
-						{{> menuButton url="/landscape/" label="Snowy Landscape"}}
+						{{> menuButton url="sun" label="Sun"}}
+						{{> menuButton url="particlesswarm" label="Music + Video - 1"}}
+						{{> menuButton url="landscape" label="Snowy Landscape"}}
 					</ul>
 				</div>
 			</div>
