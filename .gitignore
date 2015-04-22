@@ -1,4 +1,5 @@
-public/
+public/*
+!public/*.htaccess
 node_modules
 typings
 *.pem
