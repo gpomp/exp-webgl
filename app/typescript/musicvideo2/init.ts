@@ -4,11 +4,164 @@
 /// <reference path="../definitions/helper/Utils.d.ts" />
 /// <reference path="../../../typings/greensock/greensock.d.ts" />
 /// <reference path="../definitions/Site.d.ts" />
+/// <reference path="addons.ts" />
 
 declare var SHADERLIST;
 declare var voronoi;
+declare var randomColor;
 
 module webglExp {
+
+    export class bgLine {
+
+        private _uniforms;
+        private _attributes;
+
+        private _line: THREE.Line;
+        private _mat: THREE.ShaderMaterial;
+
+        constructor(index:number) {
+            var geom: THREE.BufferGeometry = new THREE.BufferGeometry();
+
+            var nb: number = 128;
+            var vertices = new Float32Array( nb * 3 );
+            var indices = new Float32Array( nb * 1 );
+            var addAngle = new Float32Array( nb * 2 );
+            
+
+            var offset3 = 0;
+            var offset2 = 0;
+            var angle: number = 0;
+            var addA: number = Math.PI / 150 + Math.random() * Math.PI / 50;
+            for (var i = 0; i < nb; ++i) {
+                indices[i] = i;
+                
+                vertices[offset3 + 0] = 0;
+                vertices[offset3 + 1] = 0;
+                vertices[offset3 + 2] = 0;
+
+                var anglerand: number = (i === 0 || i === nb - 1) ? 0 : Math.random();
+
+                addAngle[offset2 + 0] = angle;
+                addAngle[offset2 + 1] = anglerand;
+
+                offset3 += 3;
+                offset2 += 2;
+                angle += addA;
+            }
+
+            geom.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+            geom.addAttribute( 'addAngle', new THREE.BufferAttribute( addAngle, 2 ) );
+            geom.addAttribute( 'vIndex', new THREE.BufferAttribute( indices, 1 ) );
+
+            var rColor = randomColor({
+               luminosity: 'bright',
+               format: 'rgbArray'
+            });
+
+            this._uniforms = {
+                time: {
+                    type: 'f',
+                    value: 0.0
+                },
+                radius: {
+                    type: 'f',
+                    value: Math.random() * 80
+                },
+                modV: {
+                    type: 'f',
+                    value: Math.floor(6 + Math.random() * 10)
+                },
+                angle: {
+                    type: 'f',
+                    value: (Math.PI * 2) * Math.random()
+                },
+                color: {
+                    type:'v3',
+                    value: new THREE.Vector3(rColor[0] / 255, rColor[1] / 255, rColor[2] / 255)
+                },
+
+                brightSound: {
+                    type: 'f',
+                    value:0
+                }
+            }
+
+            this._attributes = {
+                vIndex: {
+                    type: 'f',
+                    value:null
+                },
+
+                addAngle: {
+                    type: 'v2',
+                    value:null
+                }
+            };
+
+            this._mat = new THREE.ShaderMaterial({
+                vertexShader: SHADERLIST.line.vertex,
+                fragmentShader: SHADERLIST.line.fragment,
+                uniforms: this._uniforms,
+                attributes: this._attributes,
+                transparent: true
+            });
+
+            this._line = new THREE.Line(geom, this._mat);
+        }
+
+        getLine():THREE.Line {
+            return this._line;
+        }
+
+        setBSound(n:number) {
+            this._uniforms.brightSound.value = n;
+            this._mat.linewidth = 1 + n;
+        }
+
+        render() {
+            this._uniforms.time.value += 0.1;
+        }
+
+        /*renderPoint(id:number, soundValue:number) {
+
+        }*/
+    }
+
+
+    export class backgroundLines {
+
+        private _lineList: webglExp.bgLine[];
+
+        constructor() {
+            this._lineList = [];
+
+            for (var i = 0; i < 128; ++i) {
+                var l: webglExp.bgLine = new webglExp.bgLine(i);
+                this._lineList.push(l);
+            }
+
+            
+        }
+
+        getLines(): THREE.Line [] {
+            var lList: THREE.Line[] = [];
+            for (var i = 0; i < this._lineList.length; ++i) {
+                lList.push(this._lineList[i].getLine());
+            }
+            return lList;
+        }
+
+        render() {
+            for (var i = 0; i < this._lineList.length; ++i) {
+                this._lineList[i].render();
+            }
+        }
+
+        renderPoint(id:number, soundValue:number) {
+            this._lineList[id].setBSound(soundValue);
+        }
+    }
 
     export class SplitPlane {
 
@@ -24,6 +177,7 @@ module webglExp {
         private _objectList: THREE.Mesh[];
 
         public ctn: THREE.Object3D;
+        public lineCtn: THREE.Object3D;
 
         private _dummy: number;
 
@@ -33,6 +187,8 @@ module webglExp {
 
         private _v2c: utils.Video2Canvas;
 
+        private lines: webglExp.backgroundLines;
+
         constructor(w: number, h: number, v2c:utils.Video2Canvas) {
             this._w = w;
             this._h = h;
@@ -41,7 +197,7 @@ module webglExp {
 
             this._dummy = 0;
 
-            this._ptNB = 64;
+            this._ptNB = 128;
 
             this._ptList = [];
             var sw: number = w - 2;
@@ -95,6 +251,14 @@ module webglExp {
                 var mesh: THREE.Mesh = new THREE.Mesh(geom, this._material);
                 this._objectList.push(mesh);
                 this.ctn.add(mesh);
+            }
+
+            this.lineCtn = new THREE.Object3D();
+            this.lineCtn.position.z = -100;
+            this.lines = new webglExp.backgroundLines();
+            var lMesh: THREE.Line[] = this.lines.getLines();
+            for (var i = 0; i < lMesh.length; ++i) {
+                this.lineCtn.add(lMesh[i]);
             }
 
         }
@@ -196,8 +360,11 @@ module webglExp {
                 for (var i = 0; i < this._objectList.length; i ++) {
                     var soundLoc = i * div;
                     this._objectList[i].position.z = -50 + this._v2c.dArray[soundLoc] * 100;
+                    this.lines.renderPoint(soundLoc, this._v2c.dArray[soundLoc]);
                     // this._objectList[i].rotation.y = -Math.PI / 4 + -1 * this._v2c.dArray[soundLoc] * Math.PI / 8;
                 }
+
+                this.lines.render();
             }
         }
     }
@@ -206,11 +373,20 @@ module webglExp {
         private _scene: THREE.Scene;
         private _camera: THREE.PerspectiveCamera;
         private _renderer: THREE.WebGLRenderer;
+        private _gui;
 
         private _objectList: webglExp.SplitPlane[];
 
         private _ambiantLight: THREE.AmbientLight;
         private _dirLight: THREE.DirectionalLight;
+
+        private _circleScene: THREE.Scene;
+
+        private _composeCircles: webglExp.EffectComposer;
+        private _composeVor: webglExp.EffectComposer;
+        private _blendComposer;
+
+        private _blendPass;
 
         private _pointLight: THREE.PointLight;
 
@@ -221,13 +397,19 @@ module webglExp {
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
 			super(scene, camera, renderer);
+            super.setInternalRender(true);
             this._scene = scene;
             this._camera = camera;
             this._renderer = renderer;
+            this._renderer.autoClear = true;
+
+            this._gui = super.getGui().get_gui();
 
             this._pointLight = new THREE.PointLight(0xffffff, 1.0, 800);
             this._pointLight.position.set(0.0,0.0, 600.0);
             this._scene.add(this._pointLight);   
+
+            this._circleScene = new THREE.Scene();
 
             this._v2c = new utils.Video2Canvas(this.audioLoaded, true);
 
@@ -237,14 +419,61 @@ module webglExp {
             var l: THREE.Mesh[] = this._objectList[0].getObjects();
 
             this._scene.add(this._objectList[0].ctn);
+            this._circleScene.add(this._objectList[0].lineCtn);
 
-            this.mouseControl = new THREE.Mouse2DControls(this._objectList[0].ctn);
+            this.mouseControl = new THREE.Mouse2DControls([this._objectList[0].ctn, this._objectList[0].lineCtn]);
             this.mouseControl.toggleEnable(true);
 
             // this._objectList[0].move();
             this._camera.position.set(0, 0, 600);
             this._camera.lookAt(new THREE.Vector3(0));
+
+            this.setComposers();
+            this.setComposerPasses();
 		}
+
+        setComposers() {
+            this._composeCircles = new webglExp.EffectComposer(this._renderer, this._circleScene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._composeVor = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
+            
+            var renderTargetParams = {    minFilter: THREE.LinearFilter,
+                                        magFilter: THREE.LinearFilter, 
+                                        format: THREE.RGBAFormat,
+                                        stencilBuffer: true };
+
+            var rt:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(Scene3D.WIDTH, Scene3D.HEIGHT, renderTargetParams);
+
+            this._blendComposer = new THREE.EffectComposer(this._renderer, rt);
+        }
+ 
+        setComposerPasses() { 
+            var renderPassC = new THREE.RenderPass(this._circleScene, this._camera);
+            var renderPassV = new THREE.RenderPass(this._scene, this._camera);
+
+            var glowPass = new THREE.ShaderPass( <any>THREE.GlowShader );
+            glowPass.uniforms['quality'].value = 1.65;
+            glowPass.uniforms['glowPower'].value = 3.8;
+            glowPass.uniforms['size'].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
+
+            var compFolder = this._gui.addFolder('composer');
+            compFolder.add(glowPass.uniforms['quality'], 'value', 0, 6).name('glow quality').step(0.05);
+            compFolder.add(glowPass.uniforms['glowPower'], 'value', 1, 10).name('glow power');
+
+            var copyPass = new THREE.ShaderPass( <any>THREE.CopyShader );
+            
+            this._composeCircles.addPass(renderPassC);
+            this._composeCircles.addPass(glowPass);
+            this._composeCircles.addPass(copyPass);
+
+            this._composeVor.addPass(renderPassV);
+
+            this._blendPass = new THREE.ShaderPass( <any>THREE.Blend2Shader );
+            this._blendPass.uniforms["tDiffuse1"].value = this._composeCircles.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composeVor.getComposer().renderTarget2;
+            this._blendPass.renderToScreen = true;
+
+            this._blendComposer.addPass(this._blendPass);
+        }
 
         audioLoaded = () => {
 
@@ -259,9 +488,20 @@ module webglExp {
             }
 
             this.mouseControl.render();
+
+            this._composeCircles.getComposer().render();
+            this._composeVor.getComposer().render();
+            this._blendComposer.render();
 		}
 
         resize() {
+
+            this._composeCircles.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._composeVor.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._blendPass.uniforms["tDiffuse1"].value = this._composeCircles.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composeVor.getComposer().renderTarget2;
+
             super.resize();
         }
 	}

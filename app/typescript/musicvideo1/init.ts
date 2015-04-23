@@ -226,7 +226,7 @@ module webglExp {
                 dir *= -1;
             }
 
-            this.mouseControl = new THREE.Mouse2DControls(this._swarmList[0]);
+            this.mouseControl = new THREE.Mouse2DControls([this._swarmList[0]]);
             this.mouseControl.toggleEnable(true);
 
             this.setComposers();

@@ -65,60 +65,60 @@ module webglExp {
 
 module THREE {
 	export class BlendShader {
-		static uniforms = {
+        static uniforms = {
 
-			"tBackground": 	{ type: "t", value: null },
-			"tDiffuse1": 	{ type: "t", value: null },
-			"tDiffuse2": 	{ type: "t", value: null },
-			"tDiffuse3": 	{ type: "t", value: null },
-			"mixRatio":  	{ type: "f", value: 0.5 },
-			"opacity":   	{ type: "f", value: 1.0 }
+            "tBackground":     { type: "t", value: null },
+            "tDiffuse1":     { type: "t", value: null },
+            "tDiffuse2":     { type: "t", value: null },
+            "tDiffuse3":     { type: "t", value: null },
+            "mixRatio":      { type: "f", value: 0.5 },
+            "opacity":       { type: "f", value: 1.0 }
 
-		};
+        };
 
-		static vertexShader = [
+        static vertexShader = [
 
-			"varying vec2 vUv;",
+            "varying vec2 vUv;",
 
-			"void main() {",
+            "void main() {",
 
-				"vUv = uv;",
-				"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+                "vUv = uv;",
+                "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
-			"}"
+            "}"
 
-		].join("\n");
+        ].join("\n");
 
-		static fragmentShader = [
+        static fragmentShader = [
 
-			"uniform float opacity;",
-			"uniform float mixRatio;",
+            "uniform float opacity;",
+            "uniform float mixRatio;",
 
-			"uniform sampler2D tBackground;",
-			"uniform sampler2D tDiffuse1;",
-			"uniform sampler2D tDiffuse2;",
-			"uniform sampler2D tDiffuse3;",
+            "uniform sampler2D tBackground;",
+            "uniform sampler2D tDiffuse1;",
+            "uniform sampler2D tDiffuse2;",
+            "uniform sampler2D tDiffuse3;",
 
-			"varying vec2 vUv;",
+            "varying vec2 vUv;",
 
-			"vec4 textOnTop(vec4 sceneColor, vec4 addColor) {",
-				"return mix(sceneColor, addColor, addColor.a);",
-			"}",
+            "vec4 textOnTop(vec4 sceneColor, vec4 addColor) {",
+                "return mix(sceneColor, addColor, addColor.a);",
+            "}",
 
-			"void main() {",
+            "void main() {",
 
-				"vec4 texel0 = texture2D( tBackground, vUv );",
-				"vec4 texel1 = texture2D( tDiffuse1, vUv );",
-				"vec4 texel2 = texture2D( tDiffuse2, vUv );",
-				"vec4 texel3 = texture2D( tDiffuse3, vUv );",
-				"vec4 cbg = textOnTop(texel0, texel1);",
-				"vec4 cbg1 = cbg + texel2;",
-				"vec4 cbg2 = textOnTop(cbg1, texel3);",
-				"gl_FragColor = vec4(cbg2);",
-			"}"
+                "vec4 texel0 = texture2D( tBackground, vUv );",
+                "vec4 texel1 = texture2D( tDiffuse1, vUv );",
+                "vec4 texel2 = texture2D( tDiffuse2, vUv );",
+                "vec4 texel3 = texture2D( tDiffuse3, vUv );",
+                "vec4 cbg = textOnTop(texel0, texel1);",
+                "vec4 cbg1 = cbg + texel2;",
+                "vec4 cbg2 = textOnTop(cbg1, texel3);",
+                "gl_FragColor = vec4(cbg2);",
+            "}"
 
-		].join("\n");
-	}
+        ].join("\n");
+    }
 
 	export class CopyOneShader {
 		static uniforms = {
@@ -187,7 +187,7 @@ module THREE {
 
     export class Mouse2DControls {
 
-        private _object: THREE.Object3D;
+        private _object: THREE.Object3D[];
         private lastPos:THREE.Vector2;
 
         private _pos: THREE.Vector2;
@@ -195,7 +195,7 @@ module THREE {
 
         private _enabled: boolean;
 
-        constructor(object:THREE.Object3D) {
+        constructor(object:THREE.Object3D[]) {
             this._object = object;
 
             this._enabled = false;
@@ -253,8 +253,10 @@ module THREE {
             this._pos.y += (coord.y - this._pos.y) * 0.1;
 
 
-            this._object.rotation.y = this._pos.x;
-            this._object.rotation.x = this._pos.y;
+            for (var i = 0; i < this._object.length; ++i) {
+                this._object[i].rotation.y = this._pos.x;
+                this._object[i].rotation.x = this._pos.y;
+            }
             // this._object.rotation.x = this._pos.y * (TheMath.PI / 0.0005);
         }
     }

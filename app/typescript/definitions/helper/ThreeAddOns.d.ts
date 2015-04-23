@@ -91,7 +91,7 @@ declare module THREE {
         private _pos;
         private _currPos;
         private _enabled;
-        constructor(object: THREE.Object3D);
+        constructor(object: THREE.Object3D[]);
         onMouseDown: (event: any) => void;
         onMouseUp: (event: any) => void;
         onMouseMove: (event: any) => void;

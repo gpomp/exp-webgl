@@ -28,7 +28,7 @@ module utils {
 
         private _soundSetup: boolean;
 
-        private _levelsCount: number = 64;
+        private _levelsCount: number = 128;
         private _levelBins: number;
 
 
