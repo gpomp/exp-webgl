@@ -10,6 +10,7 @@ module utils {
 
         private _videoEl: HTMLVideoElement;
         private _pos: THREE.Vector2;
+        private _size: THREE.Vector2;
 
         public dataArray;
         public dArray;
@@ -64,7 +65,9 @@ module utils {
 
             this._videoEl = <HTMLVideoElement>document.getElementById('video');
 
-            this._pos = new THREE.Vector2((512 - 640) * 0.5, (512 - 360) * 0.5);
+            this._size = new THREE.Vector2(512, 512 / 640 * 360);
+
+            this._pos = new THREE.Vector2((512 - this._size.x) * 0.5, (512 - this._size.y) * 0.5);
 
             this._videoEl.oncanplay = function() { this.drawCanvas(); }.bind(this); 
 
@@ -116,7 +119,7 @@ module utils {
         }
 
         render(isSpectrum:boolean = false) {
-            this._context.drawImage(this._videoEl, this._pos.x, this._pos.y, 640, 360);
+            this._context.drawImage(this._videoEl, this._pos.x, this._pos.y, this._size.x, this._size.y);
             if(this.audioLoaded) {
                 this._analyser.getByteFrequencyData(this.dataArray);
                 this.maxAudioV = 0;

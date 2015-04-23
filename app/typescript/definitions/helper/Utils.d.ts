@@ -6,6 +6,7 @@ declare module utils {
         private _context;
         private _videoEl;
         private _pos;
+        private _size;
         dataArray: any;
         dArray: any;
         audioLoaded: any;

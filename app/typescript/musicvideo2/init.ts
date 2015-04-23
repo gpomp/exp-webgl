@@ -244,6 +244,8 @@ module webglExp {
             });
 
             this.ctn = new THREE.Object3D();
+
+            this.ctn.position.z = 100;
  
             for (var i = 0; i < this._vorCells.length; ++i) {
                 var geom: THREE.Geometry = this.createCellGeometry(this._vorCells[i]);

@@ -25,6 +25,6 @@ void main() {
     }
 
     //  texture2D(tVideo, vUv)
-    vec3 textCol = texture2D( text, vUv ).rgb;
-  	gl_FragColor =	vec4(textCol, 1.0) * addedLights;
+    vec4 textCol = texture2D( text, vUv );
+  	gl_FragColor =	vec4(textCol.rgb * addedLights.rgb, textCol.a);
 }
