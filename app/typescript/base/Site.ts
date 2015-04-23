@@ -25,9 +25,13 @@ module webglExp {
 		constructor(callback:Function) {
 			this.callback = callback;
 			this.siteReady = false;
-			if (webglExp.Detector.isWebGL()) {
+            this.deviceType();
+			if (webglExp.Detector.isWebGL() && Site.activeDeviceType !== 'touch') {
 				this.configWebgl();
-			}
+			} else {
+                (<HTMLElement>document.getElementById('not-supported')).classList.add('show');
+                (<HTMLElement>document.querySelector('body')).classList.add('not-supported');
+            }
 
             this.configSite();
 		}
@@ -59,7 +63,6 @@ module webglExp {
 			new webglExp.Gui(); 
 			this.mainScene = new webglExp.Scene3D(this.shaderLoaded);	
 
-			this.deviceType();
 			window.addEventListener("resize",this.resize);
 		}
 

@@ -52,6 +52,44 @@ body {
 	.button-delay-loop(@n, (@i + 1));
 }
 
+#not-supported {
+	display: none;
+
+	&.show {
+		display: block;
+	}
+
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 99;
+
+	background: #A40000;
+
+	.supp-content {
+		width: 100%;
+		max-width: 1100px;
+		padding: 30px;
+		position: relative;
+		color: white;
+		font-size: 160%;
+		font-weight: 600;
+
+		a {
+			color: white;
+			text-decoration: none;
+			display: inline-block;
+			padding-bottom: 1px;
+			border-bottom: 1px solid white;
+
+			&:hover {
+				border-color: transparent;
+			}
+		}
+	}
+}
+
 #exp-menu {
 	position: absolute;
 	left: 0;
@@ -63,6 +101,10 @@ body {
 	transform: translate(-296px, 0);
 
 	transition: transform 0.3s ease-in;
+
+	body.not-supported & {
+		display: none;
+	}
 
 	&.show {
 		transform: translate(0, 0);
@@ -335,6 +377,10 @@ body {
 	z-index: 5;
 	body.black & {
 		color: black;
+	}
+
+	body.not-supported & {
+		display: none;
 	}
 	&.show {
 		.infos {
