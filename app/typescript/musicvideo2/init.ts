@@ -1,5 +1,6 @@
 /// <reference path="../../../typings/threejs/three.d.ts" />
 /// <reference path="../definitions/core/GLAnimation.d.ts" />
+/// <reference path="../definitions/helper/ThreeAddOns.d.ts" />
 /// <reference path="../definitions/helper/Utils.d.ts" />
 /// <reference path="../../../typings/greensock/greensock.d.ts" />
 /// <reference path="../definitions/Site.d.ts" />
@@ -21,6 +22,8 @@ module webglExp {
         private _vorPos: number[][];
 
         private _objectList: THREE.Mesh[];
+
+        public ctn: THREE.Object3D;
 
         private _dummy: number;
 
@@ -82,13 +85,16 @@ module webglExp {
                 uniforms: this._uniforms,
                 attributes: this._attributes,
                 lights: true
-            })
+            });
+
+            this.ctn = new THREE.Object3D();
  
             for (var i = 0; i < this._vorCells.length; ++i) {
                 var geom: THREE.Geometry = this.createCellGeometry(this._vorCells[i]);
                 if (geom === null) continue;
                 var mesh: THREE.Mesh = new THREE.Mesh(geom, this._material);
                 this._objectList.push(mesh);
+                this.ctn.add(mesh);
             }
 
         }
@@ -189,7 +195,7 @@ module webglExp {
                 var div: number = 1;
                 for (var i = 0; i < this._objectList.length; i ++) {
                     var soundLoc = i * div;
-                    this._objectList[i].position.z = -50 + this._v2c.dArray[soundLoc] * 400;
+                    this._objectList[i].position.z = -50 + this._v2c.dArray[soundLoc] * 100;
                     // this._objectList[i].rotation.y = -Math.PI / 4 + -1 * this._v2c.dArray[soundLoc] * Math.PI / 8;
                 }
             }
@@ -210,6 +216,8 @@ module webglExp {
 
         private _v2c: utils.Video2Canvas;
 
+        private mouseControl: THREE.Mouse2DControls;
+
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
 			super(scene, camera, renderer);
@@ -228,9 +236,10 @@ module webglExp {
 
             var l: THREE.Mesh[] = this._objectList[0].getObjects();
 
-            for (var i = 0; i < l.length; ++i) {
-                this._scene.add(l[i]);
-            }
+            this._scene.add(this._objectList[0].ctn);
+
+            this.mouseControl = new THREE.Mouse2DControls(this._objectList[0].ctn);
+            this.mouseControl.toggleEnable(true);
 
             // this._objectList[0].move();
             this._camera.position.set(0, 0, 600);
@@ -248,6 +257,8 @@ module webglExp {
             for (var i = 0; i < this._objectList.length; ++i) {
                 this._objectList[i].render();
             }
+
+            this.mouseControl.render();
 		}
 
         resize() {
