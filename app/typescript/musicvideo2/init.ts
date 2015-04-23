@@ -38,12 +38,17 @@ module webglExp {
 
             this._dummy = 0;
 
-            this._ptNB = 20 + Math.random() * 40;
+            this._ptNB = 64;
 
             this._ptList = [];
-
+            var sw: number = w - 2;
+            var sh: number = h - 2;
+            var plusradiusx: number = (sw * 0.5) / this._ptNB;
+            var plusradiusy: number = (sh * 0.5) / this._ptNB;
             for (var i = 0; i < this._ptNB; ++i) {
-                this._ptList.push([Math.random() * w, Math.random() * h]);
+                var angle: number = Math.random() * (Math.PI * 2);
+                this._ptList.push([    w * 0.5 + Math.cos(angle) * (Math.random() * sw * 0.5),
+                                       h * 0.5 + Math.sin(angle) * (Math.random() * sh * 0.5)]);
             }
 
             var vorObj = voronoi(this._ptList);
@@ -93,8 +98,10 @@ module webglExp {
         }
 
         normalizeCellPT(n:number, isHori:boolean = false) {
-            if (isHori) return Math.max(-this._w * .5, Math.min(this._w * 0.5, -this._w * .5 + n));
-            return Math.max(-this._h * .5, Math.min(this._h * 0.5, -this._h * .5 + n));
+            var hw: number = this._w * .5;
+            var hh: number = this._h * .5;
+            if (isHori) return Math.max(-hw, Math.min(hw, -hw + n));
+            return Math.max(-hh, Math.min(hh, -hh + n));
         }
 
 
@@ -108,19 +115,24 @@ module webglExp {
             var hw: number = this._w * 0.5;
             var hh: number = this._h * 0.5;
 
-            var vi: number = c[0];
+            var vi: number = c[vNb - 1];
             var vpos: number[] = this._vorPos[vi];
-            path.autoClose = true;
-
 
             path.moveTo(this.normalizeCellPT(vpos[0], true), this.normalizeCellPT(vpos[1]));
 
-            for (var i = 1; i < vNb; ++i) {
+            for (var i = vNb - 2; i > -1; --i) {
                 vi = c[i];
                 vpos = this._vorPos[vi];
-                path.lineTo(this.normalizeCellPT(vpos[0], true), this.normalizeCellPT(vpos[1]));
+                var x: number = this.normalizeCellPT(vpos[0], true);
+                var y: number = this.normalizeCellPT(vpos[1]);
+                if (x === -hw || x === hw ||
+                    y === -hh || y === hh) return null;
+                path.lineTo(x, y);
                 
             }
+
+            path.closePath();
+            // console.log(path.getSpacedPoints());
 
             var extrudeSettings = { 
                 amount: 20,
@@ -129,7 +141,7 @@ module webglExp {
             };
 
 
-            var geom: THREE.Geometry = new THREE.ExtrudeGeometry( path, extrudeSettings );  
+            var geom: THREE.Geometry = path.extrude(extrudeSettings);  
             geom.mergeVertices();
             geom.verticesNeedUpdate = true;
             geom.faceVertexUvs[0] = [];
@@ -174,10 +186,10 @@ module webglExp {
             if(this._v2c.isDrawing) {
                 this._v2c.render(true);
                 this._uniforms.text.value.needsUpdate = true;
-                var div: number = Math.floor(this._v2c.dArray.length / this._objectList.length);
+                var div: number = 1;
                 for (var i = 0; i < this._objectList.length; i ++) {
                     var soundLoc = i * div;
-                    this._objectList[i].position.z = -200 + this._v2c.dArray[soundLoc] * 400;
+                    this._objectList[i].position.z = -50 + this._v2c.dArray[soundLoc] * 400;
                     // this._objectList[i].rotation.y = -Math.PI / 4 + -1 * this._v2c.dArray[soundLoc] * Math.PI / 8;
                 }
             }
