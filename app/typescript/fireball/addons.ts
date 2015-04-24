@@ -18,6 +18,7 @@ module THREE {
             "tDiffuse3":     { type: "t", value: null },
             "time":          { type: "f", value: 0.0 },
             "quality":       { type: "f", value: 0.0 },
+            "glowPower":     { type: "f", value: 1.0 },
             "size":          { type: "v2", value: null }
 
         };

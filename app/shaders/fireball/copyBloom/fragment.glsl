@@ -9,6 +9,7 @@ uniform sampler2D tDiffuse2;
 uniform sampler2D tDiffuse3;
 uniform float time;
 uniform float quality;
+uniform float glowPower;
 uniform vec2 size;
 
 varying vec2 vUv;
@@ -19,7 +20,7 @@ const int samples = 9; // pixels per axis; higher = bigger glow, worse performan
 const int diff = 4; 
 
  
-vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
+vec4 glowEffect(vec4 colour, sampler2D tex, vec2 tc)
 {
   	vec4 source = texture2D(tex, tc);
   	vec4 sum = vec4(0);
@@ -30,7 +31,7 @@ vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
     	for (int y = -diff; y <= diff; y++)
     	{
       		vec2 offset = vec2(float(x), float(y)) * sizeFactor;
-      		sum += texture2D(tex, tc + offset);
+      		sum += texture2D(tex, tc + offset) * glowPower;
     	}
   	}
   
@@ -44,6 +45,6 @@ void main() {
 
 	vec2 vvUv = vec2(vUv.x + displacement.y * 0.015, vUv.y - displacement.x * 0.015);
 	
-	vec4 glow = effect(vec4(1.0, 0.86666666666666666666666666666667, 0.1921568627450980392156862745098, 1.0), tDiffuse2, vvUv);
+	vec4 glow = glowEffect(vec4(1.0, 0.86666666666666666666666666666667, 0.1921568627450980392156862745098, 1.0), tDiffuse2, vvUv);
   	gl_FragColor = glow;
 }

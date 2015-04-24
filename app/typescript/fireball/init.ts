@@ -550,7 +550,9 @@ module webglExp {
             this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
             this._blendPass.uniforms["size"].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._blendPass.uniforms["quality"].value = 3.5;
+            this._blendPass.uniforms["glowPower"].value = 1;
             composerFolder.add(this._blendPass.uniforms["quality"], 'value', 0.00, 10.00).name('quality');
+            composerFolder.add(this._blendPass.uniforms["glowPower"], 'value', 1.00, 10.00).name('glowPower');
             this._blendPass.renderToScreen = true;
 
             this._blendComposer.addPass(this._blendPass);
