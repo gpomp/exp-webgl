@@ -17,7 +17,7 @@ const float M_PI = 3.1415926535897932384626433832795;
 
 void main() {
 
-	vec3 baseColor = vec3(0.9, 0.45, 0.1);
+	vec3 baseColor = vec3(1.0);
 	float rad = 250.0 * 250.0;
 	float angle = atan(pos.y, pos.x);
 	float signX = -1.0 * sign(pos.x);
@@ -49,5 +49,5 @@ void main() {
 	}
 	ray /= 3.0;
 	// 
-  	gl_FragColor = vec4(baseColor * d * 2.0 + baseColor * vec3(c * 0.1) + vec3(ray.r * 0.9, ray.g * 0.45, ray.b * 0.1), 1.0);
+  	gl_FragColor = vec4(baseColor * d * 2.0 + baseColor * vec3(c * 0.1) + vec3(ray.r * 0.6, ray.g * 0.6, ray.b * 0.6), 1.0);
 }

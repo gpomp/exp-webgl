@@ -12,15 +12,26 @@ declare var SHADERLIST;
 
 module THREE {
 
+    export class GlowShader {
+
+        static uniforms = {
+            "tDiffuse": { type: "t", value: null },
+            "size": { type: "v2", value: null },
+            "quality": { type: "f", value: null },
+            "glowPower": { type: "f", value: null },
+            "glowColor": { type: "v4", value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }
+ 
+        };
+
+        static vertexShader = SHADERLIST.glow.vertex;
+        static fragmentShader = SHADERLIST.glow.fragment;
+    };
+
     export class CopyBloomShader {
         static uniforms = {
+            "tDiffuse1":     { type: "t", value: null },
             "tDiffuse2":     { type: "t", value: null },
-            "tDiffuse3":     { type: "t", value: null },
-            "time":          { type: "f", value: 0.0 },
-            "quality":       { type: "f", value: 0.0 },
-            "glowPower":     { type: "f", value: 1.0 },
-            "size":          { type: "v2", value: null }
-
+            "time": { type: "f", value: 0 }
         };
 
         static vertexShader = SHADERLIST.copyBloom.vertex;

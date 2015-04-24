@@ -6,6 +6,7 @@ uniform sampler2D tDiffuse;
 uniform float quality;
 uniform float glowPower;
 uniform vec2 size;
+uniform vec4 glowColor;
 
 varying vec2 vUv;
 
@@ -33,6 +34,6 @@ vec4 glowEffect(vec4 colour, sampler2D tex, vec2 tc)
 
 void main() {
 	
-	vec4 glow = glowEffect(vec4(1.0), tDiffuse, vUv);
+	vec4 glow = glowEffect(glowColor, tDiffuse, vUv);
   gl_FragColor = glow;
 }

@@ -5,12 +5,9 @@ precision highp float;
 
 #pragma glslify: noise = require(../../../../node_modules/glsl-noise/classic/2d)
 
+uniform sampler2D tDiffuse1;
 uniform sampler2D tDiffuse2;
-uniform sampler2D tDiffuse3;
 uniform float time;
-uniform float quality;
-uniform float glowPower;
-uniform vec2 size;
 
 varying vec2 vUv;
 
@@ -19,32 +16,15 @@ const float M_PI = 3.1415926535897932384626433832795;
 const int samples = 9; // pixels per axis; higher = bigger glow, worse performance
 const int diff = 4; 
 
- 
-vec4 glowEffect(vec4 colour, sampler2D tex, vec2 tc)
-{
-  	vec4 source = texture2D(tex, tc);
-  	vec4 sum = vec4(0);
-  	vec2 sizeFactor = vec2(1) / size * quality;
-  
-  	for (int x = -diff; x <= diff; x++)
-  	{
-    	for (int y = -diff; y <= diff; y++)
-    	{
-      		vec2 offset = vec2(float(x), float(y)) * sizeFactor;
-      		sum += texture2D(tex, tc + offset) * glowPower;
-    	}
-  	}
-  
-  	return ((sum / (float(samples) * float(samples))) + source) * colour;
-}
-
 void main() {
 	vec2 displacement = vUv - vec2(0.5);
-	displacement.x += sin(vUv.x + time * 0.1) * displacement.y + cos(vUv.x - time) * displacement.x;
-	displacement.y -= sin(vUv.y + time * 0.5) * displacement.y + cos(vUv.y - time) * displacement.x;
-
-	vec2 vvUv = vec2(vUv.x + displacement.y * 0.015, vUv.y - displacement.x * 0.015);
+	// displacement.x += sin(vUv.x + time * 0.1) * displacement.y + cos(vUv.x - time) * displacement.x;
+	// displacement.y -= sin(vUv.y + time * 0.5) * displacement.y + cos(vUv.y - time) * displacement.x;
+  float noised = noise(vec2(vUv.x + time * 0.5, vUv.y - time * 0.4));
+	vec2 vvUv = vec2(vUv.x, vUv.y - sin(vUv.x + noised) * 0.05);
 	
-	vec4 glow = glowEffect(vec4(1.0, 0.86666666666666666666666666666667, 0.1921568627450980392156862745098, 1.0), tDiffuse2, vvUv);
-  	gl_FragColor = glow;
+	vec4 texel1 = texture2D(tDiffuse1, vvUv);
+  vec4 texel2 = texture2D(tDiffuse2, vvUv);
+
+  gl_FragColor = mix(texel1, texel2, texel2.a);
 }

@@ -472,12 +472,12 @@ module webglExp {
                 side:THREE.DoubleSide,
                 uniforms: this._uniforms
             })
+            this._BloomScene = new THREE.Scene();
             var sphereGeom: THREE.SphereGeometry = new THREE.SphereGeometry(FireBall.RADIUS, 20, 20);
             this._sphere = new THREE.Mesh(sphereGeom, planeMat);
-            scene.add(this._sphere);
+            this._BloomScene.add(this._sphere);
             camera.lookAt(this._sphere.position);
 
-            this._BloomScene = new THREE.Scene();
 
             this._burstList = [];
 
@@ -509,53 +509,50 @@ module webglExp {
             this._blendComposer = new THREE.EffectComposer(this._renderer, rt);
         }
 
+        private _glowPass;
+        private _glowColor: number[];
+
         setComposerPasses() {
-            var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
-            renderPass['clear'] = false;
-            this._bloomStrength = 10000;
-            this._effectBloom = new THREE.BloomPass(this._bloomStrength, 1000, 500.0, 512, true);
-            this._blurh = 0.1;
- 
             var composerFolder = this._gui.addFolder('Composer');
 
-            var vbGUI = composerFolder.add(this, "_blurh", 0.00, 30.00);
-            vbGUI.onChange(function(value) {
-                THREE.BloomPass.blurX = new THREE.Vector2( value / (Scene3D.WIDTH * 2), 0.0 );
-                THREE.BloomPass.blurY = new THREE.Vector2( 0.0, value / (Scene3D.HEIGHT * 2) );
+            var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
+            
+            this._glowPass = new THREE.ShaderPass( <any>THREE.GlowShader );
+            this._glowPass.uniforms['quality'].value = 3.5;
+            this._glowPass.uniforms['glowPower'].value = 1.1;
+            this._glowPass.uniforms['size'].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._glowColor = [255, 106, 24];
+            this._glowPass.uniforms['glowColor'].value.set(this._glowColor[0] / 255, this._glowColor[1] / 255, this._glowColor[2] / 255, 1.0);
+
+            var gCol = composerFolder.addColor(this, '_glowColor');
+            gCol.onChange(function(value) {
+                this._glowPass.uniforms['glowColor'].value.x = value[0] / 255;
+                this._glowPass.uniforms['glowColor'].value.y = value[1] / 255;
+                this._glowPass.uniforms['glowColor'].value.z = value[2] / 255;
             }.bind(this));
 
-            var soGUI = composerFolder.add(this, "_bloomStrength", 0.00, 30.00);
-            soGUI.onChange(function(value) {
-                this._effectBloom.copyUniforms['opacity'].value = this._bloomStrength;
-            }.bind(this));
-
-            THREE.BloomPass.blurX = new THREE.Vector2( this._blurh / (Scene3D.WIDTH * 2), 0.0 );
-            THREE.BloomPass.blurY = new THREE.Vector2( 0.0, this._blurh / (Scene3D.HEIGHT * 2) );
+            
+            composerFolder.add(this._glowPass.uniforms['quality'], 'value', 0, 6).name('glow quality').step(0.05);
+            composerFolder.add(this._glowPass.uniforms['glowPower'], 'value', 0, 10).name('glow power');
 
             var copyPass = new THREE.ShaderPass(<any>THREE.CopyShader);
-            // copyPass.renderToScreen = true;
+            copyPass.renderToScreen = true;
    
             this._composerBloom.addPass(renderPass);
-            // this._composerBloom.addPass(this._effectBloom); 
             
             var renderPass2 = new THREE.RenderPass(this._scene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
-            /*var godPass = new THREE.ShaderPass(<any>THREE.GodRayShader);
-            godPass.renderToScreen = true;*/
+            
             
             this._composer.addPass(renderPass2);
-            // this._composer.addPass(this._effectBloom); 
-            // this._composer.addP    ss(copyPass); 
 
             this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
-            this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
-            this._blendPass.uniforms["size"].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
-            this._blendPass.uniforms["quality"].value = 3.5;
-            this._blendPass.uniforms["glowPower"].value = 1;
-            composerFolder.add(this._blendPass.uniforms["quality"], 'value', 0.00, 10.00).name('quality');
-            composerFolder.add(this._blendPass.uniforms["glowPower"], 'value', 1.00, 10.00).name('glowPower');
-            this._blendPass.renderToScreen = true;
+            this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
+            
 
             this._blendComposer.addPass(this._blendPass);
+            this._blendComposer.addPass(this._glowPass);
+            this._blendComposer.addPass(copyPass);
         }
 
 
@@ -586,7 +583,8 @@ module webglExp {
             this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
 
 
-           this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
             super.resize();
         }
 	}

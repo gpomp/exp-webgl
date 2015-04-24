@@ -40,7 +40,8 @@ module THREE {
             "tDiffuse": { type: "t", value: null },
             "size": { type: "v2", value: null },
             "quality": { type: "f", value: null },
-            "glowPower": { type: "f", value: null }
+            "glowPower": { type: "f", value: null },
+            "glowColor": { type: "v4", value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }
  
         };
 

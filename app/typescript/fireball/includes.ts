@@ -2,6 +2,9 @@
 
 var glslify = require('glslify');
 
+var glVertex = glslify('./../../shaders/common/glow/vertex.glsl');
+var glFragment = glslify('./../../shaders/common/glow/fragment.glsl');
+
 var sVertex = glslify('./../../shaders/fireball/sphere/vertex.glsl');
 var sFragment = glslify('./../../shaders/fireball/sphere/fragment.glsl');
 
@@ -39,6 +42,10 @@ window['SHADERLIST'] = {
     godRay: {
         vertex: gVertex,
         fragment: gFragment
+    },
+    glow: {
+        vertex: glVertex,
+        fragment: glFragment
     },
     copy: {
         vertex: cVertex,
