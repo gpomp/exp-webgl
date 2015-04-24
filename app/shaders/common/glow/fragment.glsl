@@ -13,7 +13,7 @@ const int samples = 9; // pixels per axis; higher = bigger glow, worse performan
 const int diff = 4; 
 
  
-vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
+vec4 glowEffect(vec4 colour, sampler2D tex, vec2 tc)
 {
   	vec4 source = texture2D(tex, tc);
   	vec4 sum = vec4(0);
@@ -33,6 +33,6 @@ vec4 effect(vec4 colour, sampler2D tex, vec2 tc)
 
 void main() {
 	
-	vec4 glow = effect(vec4(1.0), tDiffuse, vUv);
+	vec4 glow = glowEffect(vec4(1.0), tDiffuse, vUv);
   gl_FragColor = glow;
 }

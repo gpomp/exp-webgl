@@ -17,48 +17,6 @@ declare module webglExp {
     }
 }
 declare module THREE {
-    class BlendShader {
-        static uniforms: {
-            "tBackground": {
-                type: string;
-                value: any;
-            };
-            "tDiffuse1": {
-                type: string;
-                value: any;
-            };
-            "tDiffuse2": {
-                type: string;
-                value: any;
-            };
-            "tDiffuse3": {
-                type: string;
-                value: any;
-            };
-            "mixRatio": {
-                type: string;
-                value: number;
-            };
-            "opacity": {
-                type: string;
-                value: number;
-            };
-        };
-        static vertexShader: string;
-        static fragmentShader: string;
-    }
-    class CopyOneShader {
-        static uniforms: {
-            "tBackground": {
-                type: string;
-                value: any;
-            };
-        };
-        static vertexShader: string;
-        static fragmentShader: string;
-    }
-}
-declare module THREE {
     class HorizontalBlurShader {
     }
     class VerticalBlurShader {

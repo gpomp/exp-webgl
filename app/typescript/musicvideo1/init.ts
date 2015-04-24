@@ -93,7 +93,6 @@ module webglExp {
         render() {
             this._uniforms.time.value++;
             this._uniforms.maxAV.value = this.v2c.maxAudioV;
-            // this.rotation.y += this._dir * Math.PI * this._speed;
 
             if(this.v2c.isDrawing) {
                 this.v2c.render();
@@ -119,9 +118,6 @@ module webglExp {
         private _composer:webglExp.EffectComposer;
         private _blendComposer;
 
-        private _bloomStrength: number;
-        private _blurh: number;
-        private _effectBloom: THREE.BloomPass;
         private _blendPass: THREE.ShaderPass;
 
 
@@ -200,12 +196,6 @@ module webglExp {
             geom.addAttribute( 'timeD', new THREE.BufferAttribute( timeD, 3 ) );
             geom.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
 
-            
-
-           /* for (var i = 0; i < 100000; ++i) {
-                geom.vertices.push(new THREE.Vector3(0, 0, 0));
-            }*/
-
             this._swarmList = [];
             var startRad: number = 400;
             var dir = 1; 
@@ -254,36 +244,28 @@ module webglExp {
         setComposerPasses() {
             var renderPass = new THREE.RenderPass(this._scene, this._camera);
 
-           
-            this._bloomStrength = 7;
-            this._effectBloom = new THREE.BloomPass(this._bloomStrength, 20, 8.0, 512, true);
-            this._blurh = 2;
+            var glowPass = new THREE.ShaderPass( <any>THREE.GlowShader );
+            glowPass.uniforms['quality'].value = 2.5;
+            glowPass.uniforms['glowPower'].value = 1.5;
+            glowPass.uniforms['size'].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
 
-            var composerFolder = this._gui.addFolder('Composer');
+            var compFolder = this._gui.addFolder('composer');
+            compFolder.add(glowPass.uniforms['quality'], 'value', 0, 6).name('glow quality').step(0.05);
+            compFolder.add(glowPass.uniforms['glowPower'], 'value', 0, 10).name('glow power');
 
-            var vbGUI = composerFolder.add(this, "_blurh", 0.00, 30.00);
-            vbGUI.onChange(function(value) {
-                THREE.BloomPass.blurX = new THREE.Vector2( value / (Scene3D.WIDTH * 2), 0.0 );
-                THREE.BloomPass.blurY = new THREE.Vector2( 0.0, value / (Scene3D.HEIGHT * 2) );
-            }.bind(this));
-
-            var opGUI = composerFolder.add(this._effectBloom.copyUniforms.opacity, "value", 0.00, 100.00);
-
-            THREE.BloomPass.blurX = new THREE.Vector2( this._blurh / (Scene3D.WIDTH * 2), 0.0 );
-            THREE.BloomPass.blurY = new THREE.Vector2( 0.0, this._blurh / (Scene3D.HEIGHT * 2) );
+            var copyPass = new THREE.ShaderPass( <any>THREE.CopyShader );
 
             this._composerBloom.addPass(renderPass);
-            this._composerBloom.addPass(this._effectBloom);
+            this._composerBloom.addPass(glowPass);
+            this._composerBloom.addPass(copyPass);
             
             var renderPass2 = new THREE.RenderPass(this._scene, this._camera);
             
             this._composer.addPass(renderPass2);
 
-
-            this._blendPass = new THREE.ShaderPass( <any>THREE.BlendShader );
+            this._blendPass = new THREE.ShaderPass( <any>THREE.Blend2Shader );
             this._blendPass.uniforms["tDiffuse1"].value = this._composerBloom.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse3"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
             this._blendPass.renderToScreen = true;
 
             this._blendComposer.addPass(this._blendPass);
@@ -306,6 +288,12 @@ module webglExp {
 		}
 
         resize() {
+            this._composerBloom.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+
+            this._blendPass.uniforms["tDiffuse1"].value = this._composerBloom.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composer.getComposer().renderTarget2;
             super.resize();
         }
 	}
