@@ -37,13 +37,13 @@ void main() {
 	vec3 crackColor = texture2D( crack, vUv ).rgb;
 	vec3 tColor = topColor * (crackColor);
 	// float t = (cos(time) + sin(time)) * 0.5;
-	vec3 noisePos = vec3(pos.x, pos.y + time * 50.0 * speedNoise, pos.z - time * 110.0 * speedNoise);
+	vec3 noisePos = vec3(pos.x, pos.y + time * 100.0 * speedNoise, pos.z - time * 160.0 * speedNoise);
 	float brightnessBase = max(0.0, min(1.0, noise(noisePos * 0.1))) * 5.0;
 
-	vec3 noisemiddlePos = vec3(pos.x, pos.y + time * 50.0 * speedNoise, pos.z - time * 100.0 * speedNoise);
+	vec3 noisemiddlePos = vec3(pos.x, pos.y + time * 100.0 * speedNoise, pos.z - time * 150.0 * speedNoise);
 	float brightnessMiddle = abs(max(0.0, min(1.0, fBm(noisemiddlePos, 0.95, 0.45))));
 
-	vec3 noise3dPos = vec3(pos.x, pos.y + time * 150.0 * speedNoise, pos.z + time * 100.0 * speedNoise);
+	vec3 noise3dPos = vec3(pos.x, pos.y + time * 200.0 * speedNoise, pos.z + time * 150.0 * speedNoise);
 	float brightnessTop = max(0.0, min(1.0, fBm(noise3dPos * (1.0), 1.0, 0.4) * 0.03));
 	//  + t * (0.2)
 	//brightnessBase = floor(brightnessBase * 5.0) / 5.0;
