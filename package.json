@@ -41,7 +41,8 @@
     "three-effectcomposer": "0.0.1",
     "tsify": "^0.8.1",
     "vinyl-source-stream": "^1.1.0",
-    "voronoi-diagram": "^1.0.1"
+    "voronoi-diagram": "^1.0.1",
+    "yargs": "^3.8.0"
   },
   "devDependencies": {
     "gulp-debug": "^1.0.1"

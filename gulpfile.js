@@ -25,7 +25,8 @@ var     gulp = require('gulp'),
         insert = require('gulp-insert'),
         autoprefixer = require('gulp-autoprefixer'),
         runSequence = require('run-sequence').use(gulp),
-        rimraf = require('gulp-rimraf');
+        rimraf = require('gulp-rimraf'),
+        argv = require('yargs').argv;
 
 
 var config = {
@@ -110,11 +111,23 @@ gulp.task('base-includes', function() {
         .pipe(gulp.dest(config.dist + 'js/'));
 });
 
-gulp.task('base-js', function() {
-    runSequence(['base-code', 'base-includes']);
+gulp.task('compileprojects', function() {
+    var isCommonShader = argv.includeOnly;
+    gulp.src(config.app + "handlebars/*.handlebars")
+    .pipe(data(function(file) {
+        argv.currentname = path.basename(file.path, '.handlebars');
+        if(isCommonShader !== true) {
+            runSequence(['localhandlebars', 'localless', 'localincludes', 'localtypescript']);
+        } else {
+            runSequence('localincludes');
+        }
+    }));
+
+    argv.includeOnly = false;
 });
 
-gulp.task('handlebars', function() {
+gulp.task('localhandlebars', function() {
+    var n = argv.currentname;
     var options = {
         ignorePartials: true,
         batch : [config.app + 'handlebars/partials'],
@@ -130,7 +143,9 @@ gulp.task('handlebars', function() {
 
     var templateData = { template: '' };
 
-    gulp.src(config.app + 'handlebars/*.handlebars')
+    console.log(config.app + "handlebars/" + n + '.handlebars');
+
+    gulp.src(config.app + "handlebars/" + n + '.handlebars')
     	.pipe(data(function(file) {
             var name = path.basename(file.path, '.handlebars');
             templateData.template = file.filename = name;
@@ -142,55 +157,67 @@ gulp.task('handlebars', function() {
         	path.extname = ".html";
         }))
         .pipe(gulp.dest(function(file) {
-            return config.dist + file.filename + "/";
+            return config.dist + n + "/";
         }));
+            
+});
 
+// Compile project's less
+gulp.task('localless', function() {
 
+    var n = argv.currentname;
 
-    return gulp.src(config.app + 'handlebars/*.handlebars')
-        .pipe(data(function(file) {
-            var name = path.basename(file.path, '.handlebars');
-            // Compile corresponding less
-            gulp.src(config.app + "less/" + name + "/main.less")
-                .pipe(plumber())
-                .pipe(less().on('error', gutil.log))
-                .pipe(gulpif(config.env === 'prod', minifycss()))
-                .pipe(gulp.dest(config.dist + name + "/css/"));
+    console.log(config.app + "less/" + n + "/main.less");
 
-            // Compile local browserify includes
-            var bundler = browserify({  debug: true, 
-                            basedir: config.app,
-                            extensions: ['.ts', '.js']})
-            .add([ './typescript/' + name + '/includes.ts' ])
-            .plugin(tsify);
+    var dname = "";
+    gulp.src(config.app + "less/" + n + "/main.less")
+        .pipe(plumber())
+        .pipe(less().on('error', gutil.log))
+        .pipe(gulpif(config.env === 'prod', minifycss()))
+        .pipe(gulp.dest(config.dist + n + "/css/"));
+});
 
-            bundler.bundle()
+// Compile project's browserify includes
+gulp.task('localincludes', function() {
+    var n = argv.currentname;
+    console.log("./typescript/" + n + "/includes.ts");
+
+    var bundler = browserify({  debug: true, 
+                        basedir: config.app,
+                        extensions: ['.ts', '.js']})
+        .add([ "./typescript/" + argv.currentname + "/includes.ts" ])
+        .plugin(tsify);
+
+    bundler.bundle()
                 .pipe(source('includes.js'))
                 .pipe(gulpif(config.env === 'prod', streamify(uglify({mangle: true, compress : {drop_console:true}}))))
-                .pipe(gulp.dest(config.dist + name + '/js/'));
+                .pipe(gulp.dest(config.dist + n + '/js/'));
+});
 
-            // Compile local scripts
-            var sourceTsFiles = [
-                'typings/**/*.d.ts',
-                'app/typescript/definitions/*.d.ts',
-                'app/typescript/definitions/**/*.d.ts',
-                'app/typescript/' + name + '/*.ts', 
-                '!app/typescript/' + name + '/includes.ts'];
+ // Compile project's scripts
+gulp.task('localtypescript', function() {
+    var n = argv.currentname;
+    console.log('app/typescript/' + n + '/*.ts');
+    var sourceTsFiles = [
+            'typings/**/*.d.ts',
+            'app/typescript/definitions/*.d.ts',
+            'app/typescript/definitions/**/*.d.ts',
+            'app/typescript/' + n + '/*.ts', 
+            '!app/typescript/' + n + '/includes.ts'];
 
-            var tsResult = gulp.src(sourceTsFiles)
-                               .pipe(sourcemaps.init())
-                               .pipe(tsc({
-                                   target: 'ES5',
-                                   declarationFiles: false,
-                                   noExternalResolve: true
-                               }));
+        var tsResult = gulp.src(sourceTsFiles)
+                           .pipe(sourcemaps.init())
+                           .pipe(tsc({
+                               target: 'ES5',
+                               declarationFiles: false,
+                               noExternalResolve: true
+                           }));
 
-            tsResult.dts.pipe(gulp.dest(config.dist + 'js/'));
-            tsResult.js.pipe(concat('experiment.js'))
-                                .pipe(gulpif(config.env === 'prod', uglify({mangle: true, compress : {drop_console:true}})))
-                                .pipe(gulpif(config.env === 'dev', sourcemaps.write('./typescript')))
-                                .pipe(gulp.dest(config.dist + name + '/js/'));
-        }));
+        tsResult.dts.pipe(gulp.dest(config.dist + 'js/'));
+        tsResult.js.pipe(concat('experiment.js'))
+                            .pipe(gulpif(config.env === 'prod', uglify({mangle: true, compress : {drop_console:true}})))
+                            .pipe(gulpif(config.env === 'dev', sourcemaps.write('./typescript')))
+                            .pipe(gulp.dest(config.dist + n + '/js/'));
 });
 
 gulp.task('watch', function () {
@@ -200,21 +227,69 @@ gulp.task('watch', function () {
 
     // LESS
     gulp.watch(config.app + "less/*.less", ['less']);
-    gulp.watch(config.app + "less/**/*.less", ['handlebars']);
+    gulp.watch([config.app + "less/**/*.less", "!" + config.app + "less/generated/*.less"], function(obj) {
+
+        argv.lesspath = obj.path;
+        var p = path.dirname(obj.path).split(path.sep);
+        argv.currentname = p[p.length - 1]; 
+
+        runSequence('localless'); 
+    });
+
+    
+
+    // GLSL (Browserify includes)
+
+
+    gulp.watch([
+        config.app + 'shaders/**/*.glsl'
+    ], function(obj) {
+        var p = path.dirname(obj.path).split(path.sep);
+        argv.currentname = p[p.length - 2]; 
+
+        // If common shader recompile all projects include
+        if(argv.currentname === 'common') {
+            argv.includeOnly = true;
+            runSequence('compileprojects');
+        } else {
+            runSequence('localincludes'); 
+        }
+        
+     });
+
+    // Browserify includes
+    gulp.watch([
+        config.app + 'typescript/**/includes.ts', config.app + 'typescript/**/*.js'
+    ], function(obj) {
+        var p = path.dirname(obj.path).split(path.sep);
+        argv.currentname = p[p.length - 1]; 
+
+        runSequence('localincludes'); 
+     });
     
     // TYPESCRIPT
     gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts', "!" + config.app + "typescript/base/LaunchSite.ts"], ['base-code']);
+    
     gulp.watch([config.app + 'typescript/**/**/*.ts', 
                 config.app + 'typescript/**/*.ts',
-                config.app + 'shaders/**/*.glsl',                
-                config.app + 'shaders/*.glsl',                
+                "!" + config.app + 'typescript/**/includes.ts', 
+                "!" + config.app + 'typescript/definitions/**/*.ts', 
+                "!" + config.app + 'typescript/definitions/*.ts', 
                 "!" + config.app + 'typescript/base/**/*.ts', 
-                "!" + config.app + 'typescript/base/*.ts'], ['handlebars']);
+                "!" + config.app + 'typescript/base/*.ts'], function(obj) {
+                    var p = path.dirname(obj.path).split(path.sep);
+                    argv.currentname = p[p.length - 1]; 
+                    runSequence('localtypescript'); 
+                }); //['handlebars']
 
     gulp.watch([config.app + "typescript/base/LaunchSite.ts"], ['base-includes'])
 
     // HTML
-    gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], ['handlebars']);
+    gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], function(obj) {
+        var p = path.basename(obj.path, '.handlebars');
+        argv.currentname = p[p.length - 1]; 
+        runSequence('localhandlebars'); 
+    });
 });
 
 gulp.task('devconfig', function () {
@@ -223,7 +298,7 @@ gulp.task('devconfig', function () {
 });
 
 gulp.task('common', function(callback) {
-    runSequence( 'base-js', 'font', ['less', 'handlebars'] );
+    runSequence( 'base-includes', 'base-code', 'font', ['less', 'compileprojects'] );
 });
 
 gulp.task('dev',['devconfig', 'common', 'connect', 'watch']);
