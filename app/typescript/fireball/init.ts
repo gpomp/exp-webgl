@@ -363,7 +363,7 @@ module webglExp {
         private _quality: number;
 
         private _burstList: webglExp.ParticleBurst[];
-        private _sunRing: webglExp.BallRing;
+        // private _sunRing: webglExp.BallRing;
 
         private _composerBloom:webglExp.EffectComposer;
         private _composer:webglExp.EffectComposer;
@@ -475,7 +475,7 @@ module webglExp {
             this._BloomScene = new THREE.Scene();
             var sphereGeom: THREE.SphereGeometry = new THREE.SphereGeometry(FireBall.RADIUS, 20, 20);
             this._sphere = new THREE.Mesh(sphereGeom, planeMat);
-            this._BloomScene.add(this._sphere);
+            this._scene.add(this._sphere);
             camera.lookAt(this._sphere.position);
 
 
@@ -488,8 +488,8 @@ module webglExp {
                 pb.start((Math.floor((i / 10) * 2) + Math.random() * 2) * 1000);
             }*/
 
-            this._sunRing = new webglExp.BallRing(FireBall.RADIUS);
-            this._scene.add(this._sunRing.getPlane());
+            /*this._sunRing = new webglExp.BallRing(FireBall.RADIUS);
+            this._scene.add(this._sunRing.getPlane());*/
 
             this.setComposers();
             this.setComposerPasses();
@@ -497,29 +497,30 @@ module webglExp {
 
         setComposers() {
             this._composerBloom = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
-            this._composer = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
+            // this._composer = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
             
-            var renderTargetParams = {    minFilter: THREE.LinearFilter,
+            /*var renderTargetParams = {    minFilter: THREE.LinearFilter,
                                         magFilter: THREE.LinearFilter, 
                                         format: THREE.RGBAFormat,
                                         stencilBuffer: true };
 
             var rt:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(Scene3D.WIDTH, Scene3D.HEIGHT, renderTargetParams);
 
-            this._blendComposer = new THREE.EffectComposer(this._renderer, rt);
+            this._blendComposer = new THREE.EffectComposer(this._renderer, rt);*/
         }
 
         private _glowPass;
+        private _gRayPass;
         private _glowColor: number[];
 
         setComposerPasses() {
             var composerFolder = this._gui.addFolder('Composer');
 
-            var renderPass = new THREE.RenderPass(this._BloomScene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
+            var renderPass = new THREE.RenderPass(this._scene, this._camera);
             
             this._glowPass = new THREE.ShaderPass( <any>THREE.GlowShader );
             this._glowPass.uniforms['quality'].value = 3.5;
-            this._glowPass.uniforms['glowPower'].value = 1.1;
+            this._glowPass.uniforms['glowPower'].value = 0.9;
             this._glowPass.uniforms['size'].value = new THREE.Vector2(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._glowColor = [255, 106, 24];
             this._glowPass.uniforms['glowColor'].value.set(this._glowColor[0] / 255, this._glowColor[1] / 255, this._glowColor[2] / 255, 1.0);
@@ -530,61 +531,75 @@ module webglExp {
                 this._glowPass.uniforms['glowColor'].value.y = value[1] / 255;
                 this._glowPass.uniforms['glowColor'].value.z = value[2] / 255;
             }.bind(this));
-
             
             composerFolder.add(this._glowPass.uniforms['quality'], 'value', 0, 6).name('glow quality').step(0.05);
             composerFolder.add(this._glowPass.uniforms['glowPower'], 'value', 0, 10).name('glow power');
+
+            this._gRayPass = new THREE.ShaderPass( <any>THREE.GodRayShader );
+            composerFolder.add(this._gRayPass.uniforms['radiusLight'], 'value', 0.00, 0.500).name('light radius').step(0.005);
+            composerFolder.add(this._gRayPass.uniforms['lightDirDOTviewDir'], 'value', 0.00, 10.00).name('god ray v');
+            composerFolder.add(this._gRayPass.uniforms['exposureNB'], 'value', 0.00, 2.00).name('god ray exposure').step(0.05);
+            composerFolder.add(this._gRayPass.uniforms['decay'], 'value', 0.7500, 1.0500).name('god ray decay').step(0.005);
+            composerFolder.add(this._gRayPass.uniforms['density'], 'value', 0.00, 2.00).name('god ray density');
+            composerFolder.add(this._gRayPass.uniforms['weight'], 'value', 0.00, 20.00).name('god ray weight');
+            composerFolder.add(this._gRayPass.uniforms['illuminationDecay'], 'value', 0.00, 2.00).name('god ray ill decay');
+
 
             var copyPass = new THREE.ShaderPass(<any>THREE.CopyShader);
             copyPass.renderToScreen = true;
    
             this._composerBloom.addPass(renderPass);
+            this._composerBloom.addPass(this._glowPass);
+            this._composerBloom.addPass(this._gRayPass);
+            this._composerBloom.addPass(copyPass);
+             
+            // var renderPass2 = new THREE.RenderPass(this._scene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
             
-            var renderPass2 = new THREE.RenderPass(this._scene, this._camera, null, new THREE.Color(0, 0, 0), 0.0);
             
-            
-            this._composer.addPass(renderPass2);
+            // this._composer.addPass(renderPass2);
 
-            this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
-            this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
+            // this._blendPass = new THREE.ShaderPass( <any>THREE.CopyBloomShader );
+            /*this._blendPass.uniforms["lightDirDOTviewDir"].value = 0.0;
+            composerFolder.add(this._blendPass.uniforms['lightDirDOTviewDir'], 'value', 0, 10).name('god ray');
+            // this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
+            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;*/
             
 
-            this._blendComposer.addPass(this._blendPass);
+            /*this._blendComposer.addPass(this._blendPass);
             this._blendComposer.addPass(this._glowPass);
-            this._blendComposer.addPass(copyPass);
+            this._blendComposer.addPass(copyPass);*/
         }
 
 
 		render() {
             this._uniforms.time.value += 0.01;
 
-            for (var i = 0; i < this._burstList.length; ++i) {
+            /*for (var i = 0; i < this._burstList.length; ++i) {
                 this._burstList[i].render(this._uniforms.time.value);
-            }
+            }*/
 
             
 
-            this._sunRing.render();
+            // this._sunRing.render();
             // this._composer.getComposer().render();
 
-            this._blendPass.uniforms["time"].value += 0.02;
+            // this._blendPass.uniforms["time"].value += 0.02;
 
             this._composerBloom.getComposer().render();
-            this._composer.getComposer().render();
-            this._blendComposer.render();
+            // this._composer.getComposer().render();
+            // this._blendComposer.render();
 
 			super.render();
 		}
 
         resize() {
-            this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            // this._composer.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
             this._composerBloom.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
-            this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
+            // this._blendComposer.setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
 
 
-            this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
-            this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
+            // this._blendPass.uniforms["tDiffuse1"].value = this._composer.getComposer().renderTarget2;
+            // this._blendPass.uniforms["tDiffuse2"].value = this._composerBloom.getComposer().renderTarget2;
             super.resize();
         }
 	}

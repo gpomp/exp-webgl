@@ -15,7 +15,7 @@ module THREE {
     export class GlowShader {
 
         static uniforms = {
-            "tDiffuse": { type: "t", value: null },
+            "tDiffuse": { type: "t", value: THREE.ImageUtils.generateDataTexture(4, 4, new THREE.Color(0x000000)) },
             "size": { type: "v2", value: null },
             "quality": { type: "f", value: null },
             "glowPower": { type: "f", value: null },
@@ -29,9 +29,10 @@ module THREE {
 
     export class CopyBloomShader {
         static uniforms = {
-            "tDiffuse1":     { type: "t", value: null },
+            "tDiffuse1":     { type: "t", value: THREE.ImageUtils.generateDataTexture(4, 4, new THREE.Color(0x000000)) },
             "tDiffuse2":     { type: "t", value: null },
-            "time": { type: "f", value: 0 }
+            "time": { type: "f", value: 0 },
+            "lightDirDOTviewDir": { type: "f", value: 0 }
         };
 
         static vertexShader = SHADERLIST.copyBloom.vertex;
@@ -41,7 +42,14 @@ module THREE {
 
     export class GodRayShader {
         static uniforms = {
-            "tDiffuse":     { type: "t", value: null }
+            "tDiffuse":     { type: "t", value: null },
+            "radiusLight": { type: "f", value: 0.2 },
+            "lightDirDOTviewDir": { type: "f", value: 1.9 },
+            "exposureNB": { type: "f", value: 0.35 },
+            "decay": { type: "f", value: 0.95 },
+            "density": { type: "f", value: 0.4 },
+            "weight": { type: "f", value: 15.0 },
+            "illuminationDecay": { type: "f", value: 1.4 }
 
         };
 
@@ -52,7 +60,7 @@ module THREE {
 
     export class CopyShader {
         static uniforms = {
-            "tDiffuse":     { type: "t", value: null },
+            "tDiffuse":     { type: "t", value: THREE.ImageUtils.generateDataTexture(4, 4, new THREE.Color(0x000000)) },
             "opacity":     { type: "f", value: 1.0 }
 
         };

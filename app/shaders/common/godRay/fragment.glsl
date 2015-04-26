@@ -3,31 +3,48 @@
 precision highp float;
 #endif
 
-const float NUM_SAMPLES = 50.0 ;
+const int NUM_SAMPLES = 50;
 
 uniform sampler2D tDiffuse;
+uniform float lightDirDOTviewDir;
+uniform float exposureNB;
+uniform float decay;
+uniform float density;
+uniform float weight;
+uniform float illuminationDecay;
+uniform float radiusLight;
+
 varying vec2 vUv;
 
-void main() {
-	vec4 texel = texture2D( tDiffuse, vUv );
-	float decay = 0.2;
+vec4 godRay(sampler2D text, vec2 uv) {
+	float exposure	= exposureNB / float(NUM_SAMPLES);
+	// vec2 distFromMiddle = uv - vec2(0.5, 0.5);
+	// float distSquare = distFromMiddle.x * distFromMiddle.x + distFromMiddle.y * distFromMiddle.y;
+	// float maxDist = radiusLight * radiusLight + radiusLight * radiusLight;
+  	vec2 deltaTextCoord = uv - vec2(0.5, 0.5);
+	vec2 textCoo = uv;
+	deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;
 
-	vec4 col = vec4(0.0);
-	vec2 uv = vUv;
-	vec2 deltaTextCoord = vUv;
+	vec4 origColor = texture2D(text, uv);
+	vec4 raysColor = vec4(0.0);
 
-	deltaTextCoord *= 1.0 /  float(NUM_SAMPLES) * 2.0;
-	float illuminationDecay = 1.0;
-	for(float i = 0.0; i < NUM_SAMPLES; i++) {
-		uv -= deltaTextCoord;
-	    vec4 sample = texture2D( tDiffuse, vUv );
+	float illDecay = illuminationDecay;
 
-	     sample *= illuminationDecay * 1.0;
-
-	     col += sample;
-
-	     illuminationDecay *= decay;
+	for(int i=0; i < NUM_SAMPLES ; i++)
+	{
+		textCoo -= deltaTextCoord;
+		vec4 tsample = texture2D(text, textCoo );
+		float b = (tsample.b + tsample.g + tsample.b) / 3.0;
+		tsample *= illDecay * weight * b;
+		raysColor += tsample;
+		illDecay *= decay;
 	}
+	raysColor *= exposure * lightDirDOTviewDir;
+	vec4 finalCol = origColor + raysColor;
 
-  	gl_FragColor = col;
+	return finalCol;
+}
+
+void main() {
+  	gl_FragColor = godRay(tDiffuse, vUv);
 }

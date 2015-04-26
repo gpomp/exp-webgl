@@ -187,7 +187,7 @@ gulp.task('localincludes', function() {
     var bundler = browserify({  debug: true, 
                         basedir: config.app,
                         extensions: ['.ts', '.js']})
-        .add([ "./typescript/" + argv.currentname + "/includes.ts" ])
+        .add([ "./typescript/" + n + "/includes.ts" ])
         .plugin(tsify);
 
     bundler.bundle()
@@ -245,7 +245,7 @@ gulp.task('watch', function () {
         config.app + 'shaders/**/*.glsl'
     ], function(obj) {
         var p = path.dirname(obj.path).split(path.sep);
-        argv.currentname = p[p.length - 2]; 
+        argv.currentname = p[p.length - 2];
 
         // If common shader recompile all projects include
         if(argv.currentname === 'common') {
@@ -280,7 +280,7 @@ gulp.task('watch', function () {
                     var p = path.dirname(obj.path).split(path.sep);
                     argv.currentname = p[p.length - 1]; 
                     runSequence('localtypescript'); 
-                }); //['handlebars']
+                });
 
     gulp.watch([config.app + "typescript/base3d/includes3d.ts"], ['base-3d-includes'])
 
