@@ -81,7 +81,7 @@ gulp.task('base-code', function() {
         'typings/**/*.d.ts',
         'app/typescript/base/*.ts', 
         'app/typescript/base/**/*.ts',
-        '!app/typescript/base/LaunchSite.ts'];
+        '!app/typescript/base/includes3d.ts'];
 
     var tsResult = gulp.src(sourceTsFiles)
                        .pipe(sourcemaps.init())
@@ -102,11 +102,11 @@ gulp.task('base-code', function() {
 gulp.task('base-includes', function() {
     var bundler = browserify({  debug: true,
                                 extensions: ['.ts', '.js']})
-        .add([ './app/typescript/base/LaunchSite.ts' ])
+        .add([ './app/typescript/base/includes3d.ts' ])
         .plugin(tsify);
 
     return bundler.bundle()
-        .pipe(source('global-vendors.js'))
+        .pipe(source('vendors-3d.js'))
         .pipe(gulpif(config.env === 'prod', streamify(uglify({mangle: true, compress : {drop_console:true}}))))
         .pipe(gulp.dest(config.dist + 'js/'));
 });
@@ -126,6 +126,8 @@ gulp.task('compileprojects', function() {
     argv.includeOnly = false;
 });
 
+
+// Compile project's html
 gulp.task('localhandlebars', function() {
     var n = argv.currentname;
     var options = {
@@ -239,8 +241,6 @@ gulp.task('watch', function () {
     
 
     // GLSL (Browserify includes)
-
-
     gulp.watch([
         config.app + 'shaders/**/*.glsl'
     ], function(obj) {
@@ -268,7 +268,7 @@ gulp.task('watch', function () {
      });
     
     // TYPESCRIPT
-    gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts', "!" + config.app + "typescript/base/LaunchSite.ts"], ['base-code']);
+    gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts', "!" + config.app + "typescript/base/includes3d.ts"], ['base-code']);
     
     gulp.watch([config.app + 'typescript/**/**/*.ts', 
                 config.app + 'typescript/**/*.ts',
@@ -282,7 +282,7 @@ gulp.task('watch', function () {
                     runSequence('localtypescript'); 
                 }); //['handlebars']
 
-    gulp.watch([config.app + "typescript/base/LaunchSite.ts"], ['base-includes'])
+    gulp.watch([config.app + "typescript/base/includes3d.ts"], ['base-includes'])
 
     // HTML
     gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], function(obj) {
