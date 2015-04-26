@@ -75,13 +75,13 @@ gulp.task('less', function () {
         .pipe(gulp.dest(config.dist + "css"));
 });
 
-// Compile base typescript
-gulp.task('base-code', function() {
+// Compile base 3d typescript
+gulp.task('base-3d-code', function() {
     var sourceTsFiles = [
         'typings/**/*.d.ts',
-        'app/typescript/base/*.ts', 
-        'app/typescript/base/**/*.ts',
-        '!app/typescript/base/includes3d.ts'];
+        'app/typescript/base3d/*.ts', 
+        'app/typescript/base3d/**/*.ts',
+        '!app/typescript/base3d/includes3d.ts'];
 
     var tsResult = gulp.src(sourceTsFiles)
                        .pipe(sourcemaps.init())
@@ -98,11 +98,11 @@ gulp.task('base-code', function() {
                         .pipe(gulp.dest(config.dist + 'js/'));
 });
 
-// Compile base Browserify includes
-gulp.task('base-includes', function() {
+// Compile base 3d Browserify includes
+gulp.task('base-3d-includes', function() {
     var bundler = browserify({  debug: true,
                                 extensions: ['.ts', '.js']})
-        .add([ './app/typescript/base/includes3d.ts' ])
+        .add([ './app/typescript/base3d/includes3d.ts' ])
         .plugin(tsify);
 
     return bundler.bundle()
@@ -268,21 +268,21 @@ gulp.task('watch', function () {
      });
     
     // TYPESCRIPT
-    gulp.watch([config.app + 'typescript/base/**/*.ts', config.app + 'typescript/base/*.ts', "!" + config.app + "typescript/base/includes3d.ts"], ['base-code']);
+    gulp.watch([config.app + 'typescript/base3d/**/*.ts', config.app + 'typescript/base3d/*.ts', "!" + config.app + "typescript/base3d/includes3d.ts"], ['base-3d-code']);
     
     gulp.watch([config.app + 'typescript/**/**/*.ts', 
                 config.app + 'typescript/**/*.ts',
                 "!" + config.app + 'typescript/**/includes.ts', 
                 "!" + config.app + 'typescript/definitions/**/*.ts', 
                 "!" + config.app + 'typescript/definitions/*.ts', 
-                "!" + config.app + 'typescript/base/**/*.ts', 
-                "!" + config.app + 'typescript/base/*.ts'], function(obj) {
+                "!" + config.app + 'typescript/base3d/**/*.ts', 
+                "!" + config.app + 'typescript/base3d/*.ts'], function(obj) {
                     var p = path.dirname(obj.path).split(path.sep);
                     argv.currentname = p[p.length - 1]; 
                     runSequence('localtypescript'); 
                 }); //['handlebars']
 
-    gulp.watch([config.app + "typescript/base/includes3d.ts"], ['base-includes'])
+    gulp.watch([config.app + "typescript/base3d/includes3d.ts"], ['base-3d-includes'])
 
     // HTML
     gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], function(obj) {
@@ -298,7 +298,7 @@ gulp.task('devconfig', function () {
 });
 
 gulp.task('common', function(callback) {
-    runSequence( 'base-includes', 'base-code', 'font', ['less', 'compileprojects'] );
+    runSequence( 'base-3d-includes', 'base-3d-code', 'font', ['less', 'compileprojects'] );
 });
 
 gulp.task('dev',['devconfig', 'common', 'connect', 'watch']);

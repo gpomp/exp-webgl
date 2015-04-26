@@ -12,4 +12,4 @@ window['SHADERLIST'] = {
         vertex: pVertex,
         fragment: pFragment
     }
-}
+} 
