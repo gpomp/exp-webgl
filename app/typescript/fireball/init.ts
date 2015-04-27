@@ -33,6 +33,8 @@ module webglExp {
         private _middleColor: number[];
         private _topColor: number[];
 
+        private _mousePos: THREE.Vector2;
+
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
 			super(scene, camera, renderer);
@@ -59,6 +61,12 @@ module webglExp {
             var perimeter = 2 * Math.PI * FireBall.RADIUS;
 
             this._uniforms = {
+
+                mousePos: {
+                    type: 'v2',
+                    value: new THREE.Vector2(0, 0)
+                },
+
                 time: {
                     type: 'f',
                     value: Math.random() * 10000
@@ -136,7 +144,19 @@ module webglExp {
 
             this.setComposers();
             this.setComposerPasses();
+
+            this._mousePos = new THREE.Vector2(0, 0);
+
+            document.addEventListener('mousemove', this.onMouseMove);
 		}
+
+        onMouseMove = (event:MouseEvent) => {
+            var w: number = Scene3D.WIDTH;
+            var h: number = Scene3D.HEIGHT;
+            var x: number = (event.clientX - w * .5) / (w * .5);
+            var y: number = (event.clientY - h * .5) / (h * .5);
+            this._mousePos.set(Math.abs(x), Math.abs(y));
+        }
 
         setComposers() {
             this._composerBloom = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
@@ -190,6 +210,9 @@ module webglExp {
 
 		render() {
             this._uniforms.time.value += 0.01;
+
+            this._uniforms.mousePos.value.x += (this._mousePos.x - this._uniforms.mousePos.value.x) * 0.1;
+            this._uniforms.mousePos.value.y += (this._mousePos.y - this._uniforms.mousePos.value.y) * 0.1;
 
             this._composerBloom.getComposer().render();
 
