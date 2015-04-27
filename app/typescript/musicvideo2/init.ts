@@ -20,6 +20,8 @@ module webglExp {
         private _line: THREE.Line;
         private _mat: THREE.ShaderMaterial;
 
+        private _addTime: number;
+
         constructor(index:number) {
             var geom: THREE.BufferGeometry = new THREE.BufferGeometry();
 
@@ -43,7 +45,7 @@ module webglExp {
                 var anglerand: number = (i === 0 || i === nb - 1) ? 0 : Math.random();
 
                 addAngle[offset2 + 0] = angle;
-                addAngle[offset2 + 1] = anglerand;
+                addAngle[offset2 + 1] = Math.random();
 
                 offset3 += 3;
                 offset2 += 2;
@@ -59,14 +61,16 @@ module webglExp {
                format: 'rgbArray'
             });
 
+            this._addTime = 0.025 + Math.random() * 0.05;
+
             this._uniforms = {
                 time: {
                     type: 'f',
-                    value: 0.0
+                    value: Math.random() * 1000
                 },
                 radius: {
                     type: 'f',
-                    value: Math.random() * 80
+                    value: Math.random()
                 },
                 modV: {
                     type: 'f',
@@ -120,7 +124,8 @@ module webglExp {
         }
 
         render() {
-            this._uniforms.time.value += 0.1;
+            this._uniforms.time.value += 0.05;
+            //  this._uniforms.radius.value += Math.cos(this._uniforms.time.value * 0.1);
         }
 
         /*renderPoint(id:number, soundValue:number) {
@@ -447,6 +452,8 @@ module webglExp {
 
             this._blendComposer = new THREE.EffectComposer(this._renderer, rt);
         }
+
+        private _gRayPass;
  
         setComposerPasses() { 
             var renderPassC = new THREE.RenderPass(this._circleScene, this._camera);
@@ -461,10 +468,20 @@ module webglExp {
             compFolder.add(glowPass.uniforms['quality'], 'value', 0, 6).name('glow quality').step(0.05);
             compFolder.add(glowPass.uniforms['glowPower'], 'value', 1, 10).name('glow power');
 
+            /*this._gRayPass = new THREE.ShaderPass( <any>THREE.GodRayShader );
+            compFolder.add(this._gRayPass.uniforms['radiusLight'], 'value', 0.00, 0.500).name('light radius').step(0.005);
+            compFolder.add(this._gRayPass.uniforms['lightDirDOTviewDir'], 'value', 0.00, 10.00).name('god ray v');
+            compFolder.add(this._gRayPass.uniforms['exposureNB'], 'value', 0.00, 2.00).name('god ray exposure').step(0.05);
+            compFolder.add(this._gRayPass.uniforms['decay'], 'value', 0.7500, 1.0500).name('god ray decay').step(0.005);
+            compFolder.add(this._gRayPass.uniforms['density'], 'value', 0.00, 2.00).name('god ray density');
+            compFolder.add(this._gRayPass.uniforms['weight'], 'value', 0.00, 20.00).name('god ray weight');
+            compFolder.add(this._gRayPass.uniforms['illuminationDecay'], 'value', 0.00, 2.00).name('god ray ill decay');
+*/
             var copyPass = new THREE.ShaderPass( <any>THREE.CopyShader );
             
             this._composeCircles.addPass(renderPassC);
             this._composeCircles.addPass(glowPass);
+            // this._composeCircles.addPass(this._gRayPass);
             this._composeCircles.addPass(copyPass);
 
             this._composeVor.addPass(renderPassV);

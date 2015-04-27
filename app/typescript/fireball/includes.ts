@@ -23,9 +23,6 @@ var gFragment = glslify('./../../shaders/common/godRay/fragment.glsl');
 var cVertex = glslify('./../../shaders/common/copy/vertex.glsl');
 var cFragment = glslify('./../../shaders/common/copy/fragment.glsl');
 
-var BloomPass = require('./BloomPass');
-window['THREE']['BloomPass'] = BloomPass;
-
 window['SHADERLIST'] = {
     sphere: {
         vertex: sVertex,

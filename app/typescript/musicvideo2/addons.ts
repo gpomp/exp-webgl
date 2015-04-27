@@ -12,6 +12,25 @@ module THREE {
         static fragmentShader = SHADERLIST.blend.fragment;
     };
 
+    export class GodRayShader {
+        static uniforms = {
+            "tDiffuse":     { type: "t", value: null },
+            "tDiffuse1": { type: "t", value: THREE.ImageUtils.generateDataTexture(4, 4, new THREE.Color(0xFF0000)) },
+            "radiusLight": { type: "f", value: 0.2 },
+            "lightDirDOTviewDir": { type: "f", value: 1.9 },
+            "exposureNB": { type: "f", value: 0.35 },
+            "decay": { type: "f", value: 0.95 },
+            "density": { type: "f", value: 0.4 },
+            "weight": { type: "f", value: 15.0 },
+            "illuminationDecay": { type: "f", value: 1.4 }
+
+        };
+
+        static vertexShader = SHADERLIST.godRay.vertex;
+
+        static fragmentShader = SHADERLIST.godRay.fragment;
+    }
+
     export class GlowShader {
 
         static uniforms = {

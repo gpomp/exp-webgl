@@ -17,6 +17,9 @@ var pFragment = glslify('./../../shaders/musicvideo2/pfragment/fragment.glsl');
 var lVertex = glslify('./../../shaders/musicvideo2/lines/vertex.glsl');
 var lFragment = glslify('./../../shaders/musicvideo2/lines/fragment.glsl');
 
+var grVertex = glslify('./../../shaders/common/godRay/vertex.glsl');
+var grFragment = glslify('./../../shaders/common/godRay/fragment.glsl');
+
 var voronoi = require('../../../node_modules/voronoi-diagram/voronoi');
 window['voronoi'] = voronoi;
 
@@ -44,6 +47,11 @@ window['SHADERLIST'] = {
     copy: {
         vertex: cVertex,
         fragment: cFragment
+    },
+
+    godRay: {
+        vertex: grVertex,
+        fragment: grFragment
     },
 
     glow: {

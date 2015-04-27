@@ -1,4 +1,3 @@
-#extension GL_OES_standard_derivatives : enable
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -6,6 +5,7 @@ precision highp float;
 const int NUM_SAMPLES = 50;
 
 uniform sampler2D tDiffuse;
+uniform sampler2D tDiffuse1;
 uniform float lightDirDOTviewDir;
 uniform float exposureNB;
 uniform float decay;
@@ -46,5 +46,9 @@ vec4 godRay(sampler2D text, vec2 uv) {
 }
 
 void main() {
-  	gl_FragColor = godRay(tDiffuse, vUv);
+	vec4 ontop = texture2D(tDiffuse1, vUv);
+	float b = (ontop.r + ontop.g + ontop.b) / 3.0;
+
+	vec4 gr = godRay(tDiffuse, vUv);
+  	gl_FragColor = gr;
 }

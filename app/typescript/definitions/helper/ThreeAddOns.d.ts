@@ -2,6 +2,9 @@
 /// <reference path="../Site.d.ts" />
 /// <reference path="../core/Scene3D.d.ts" />
 declare module webglExp {
+    class FakeTranspTexture {
+        constructor();
+    }
     class MouseSpeed {
         distSquared: number;
         private mousePosX;

@@ -4,6 +4,22 @@
 
 module webglExp {
 
+    export class FakeTranspTexture {
+        constructor() {
+            var can: HTMLCanvasElement = document.createElement('canvas');
+            can.width = 200;
+            can.height = 200;
+            can.getContext('2d').fillStyle = "rgba(255, 255, 255, 1)";
+            can.getContext('2d').fillRect(0, 0, can.width, can.height);
+
+            var t: THREE.Texture = new THREE.Texture(can);
+            t.format = THREE.RGBAFormat;
+            t.needsUpdate = true;
+
+            return t;
+        }
+    }
+
 	export class MouseSpeed {
 
 		public distSquared:number;
