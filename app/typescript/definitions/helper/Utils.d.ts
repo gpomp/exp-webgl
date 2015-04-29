@@ -1,5 +1,10 @@
 /// <reference path="../../../../typings/threejs/three.d.ts" />
+/// <reference path="../core/Scene3D.d.ts" />
 declare module utils {
+    class Utils3D {
+        constructor();
+        static toScreenPosition(obj: THREE.Object3D, camera: THREE.PerspectiveCamera): THREE.Vector3;
+    }
     class Video2Canvas {
         isDrawing: boolean;
         private _canvas;

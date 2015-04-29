@@ -3,6 +3,7 @@
 /// <reference path="../definitions/Site.d.ts" />
 /// <reference path="../definitions/helper/Utils.d.ts" />
 /// <reference path="../../../typings/greensock/greensock.d.ts" />
+/// <reference path="addons.ts" />
 
 declare var SHADERLIST;
 
@@ -99,7 +100,7 @@ module webglExp {
                 vertices[ i*3 + 1 ] = vPos[i][1];
                 vertices[ i*3 + 2 ] = vPos[i][2];
 
-                modValue[ i*2 + 0 ] = 0.3 + Math.floor(Math.random() * 100) / 100;
+                modValue[ i*2 + 0 ] = 0.3 + Math.floor(Math.random() * 10000) / 10000;
                 modValue[ i*2 + 1 ] = 4000 + Math.random() * 400.0;
             }
 
@@ -150,6 +151,8 @@ module webglExp {
         private _checkDir: number;
         private _countFrames: number;
 
+        private _bgCol: number[];
+
         private _keyControls: utils.GameKeyBoardControl;
         private _speedX: number;
         private _speedY: number;
@@ -165,9 +168,20 @@ module webglExp {
 
         private _snowField: webglExp.SnowField;
 
+        private _composerLandscape:webglExp.EffectComposer;
+
+        private _bumpComposer;
+        private _bumpPass;
+
+        private _lightScene: THREE.Scene;
+        private _lightSphere: THREE.Mesh;
+        private _planeBG: THREE.Mesh;
+
 
         private _scrollV:THREE.Vector2;
         private _scrollPond:THREE.Vector2;
+
+        private _terrainSize: THREE.Vector2;
 
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
@@ -176,15 +190,17 @@ module webglExp {
             this._camera = camera;
             this._renderer = renderer;
 
+            super.setInternalRender(true);
+
             this._scrollV = new THREE.Vector2(0);
             this._scrollPond = new THREE.Vector2(10, 10);
 
-            this._renderer.setClearColor(new THREE.Color(255, 255, 255));
+            // this._renderer.setClearColor(new THREE.Color(255, 255, 255));
 
             this._gui = super.getGui().get_gui();
 
-            var w: number = Scene3D.WIDTH * 3;
-            var h: number = 4000;
+            this._terrainSize = new THREE.Vector2(Scene3D.WIDTH * 3, Scene3D.WIDTH * 3);
+
 
             var grassTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/grass.jpg');
             grassTexture.wrapS = THREE.RepeatWrapping;
@@ -202,20 +218,27 @@ module webglExp {
             crackTexture.wrapS = THREE.RepeatWrapping;
             crackTexture.wrapT = THREE.RepeatWrapping;
 
-            var hFog = h * 0.5;
+            this._bgCol = [0, 0, 0];
+
+            var hFog = this._terrainSize.x * 0.4;
 
             this._uniforms = {
+
+                bumpMat: {
+                    type: 't',
+                    value: null
+                },
                 time: {
                     type: 'f',
                     value: 0.0
                 },
                 width: {
                     type: 'f',
-                    value: w
+                    value: this._terrainSize.x
                 },
                 height: {
                     type: 'f',
-                    value: h
+                    value: this._terrainSize.y
                 },
                 avWSeg: {
                     type: 'f',
@@ -243,7 +266,7 @@ module webglExp {
                 },
                 heightVal: {
                     type: 'f',
-                    value: 702.0
+                    value: 1412.0
                 },
                 heightAspVal: {
                     type: 'f',
@@ -263,7 +286,7 @@ module webglExp {
                 },
                 light: {
                     type: 'v3',
-                    value: new THREE.Vector3(0.8, 1.0, 1.0)
+                    value: new THREE.Vector3(-1177, -295, 1029)
                 },
                 grass: {
                     type: 't',
@@ -296,33 +319,30 @@ module webglExp {
                 noiseFogAlpha: {
                     type: 'f',
                     value: 0.6
+                },
+                bgCol: {
+                    type: 'v3',
+                    value: new THREE.Vector3(this._bgCol[0] / 255, this._bgCol[1] / 255, this._bgCol[2] / 255)
                 }
             }
 
             var groundFolder = this._gui.addFolder('Ground');
-            groundFolder.add(this._uniforms.noisePond, 'value', 600.0, 50000.0).name('noisePond');
-            groundFolder.add(this._uniforms.uH, 'value', 0.0, 2.0).name('uH').step(0.05);
-            groundFolder.add(this._uniforms.uLacunarity, 'value', 0.0, 5.0).name('uLacunarity').step(0.05);
             groundFolder.add(this._uniforms.heightVal, 'value', 1.0, 4000.0).name('heightVal');
             groundFolder.add(this._uniforms.crackPond, 'value', 400.0, 1000.0).name('crackPond');
-
-             var lightFolder = this._gui.addFolder("Light Position");
-             lightFolder.add(this._uniforms.light.value, 'x', -1, 1);
-             lightFolder.add(this._uniforms.light.value, 'y', -1, 1);
-             lightFolder.add(this._uniforms.light.value, 'z', -1, 1);
 
             this._attributes = {
                 
             }
 
-            var planeGeom:THREE.BufferGeometry = this.createCustomPlaneGeometry(w, h);
+            var planeGeom:THREE.BufferGeometry = this.createCustomPlaneGeometry(this._terrainSize.x, this._terrainSize.y);
 
             var planeMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
                 vertexShader: SHADERLIST.ground.vertex,
                 fragmentShader: SHADERLIST.ground.fragment,
                 uniforms: this._uniforms,
                 attributes: this._attributes,
-                side: THREE.DoubleSide
+                side: THREE.DoubleSide,
+                transparent:true
             });
 
 
@@ -331,10 +351,10 @@ module webglExp {
             this._ground.position.y = -1000;
             scene.add(this._ground);
 
-            this._snowField = new webglExp.SnowField(w, h, this._gui);
+            this._snowField = new webglExp.SnowField(this._terrainSize.x, this._terrainSize.y, this._gui);
             this._scene.add(this._snowField.getField());
 
-            this._camera.position.z = 2500;
+            this._camera.position.z = 3000;
             camera.lookAt(this._ground.position);
 
             this._camBaseAngle = new THREE.Vector2(this._camera.rotation.x, this._camera.rotation.z);
@@ -345,7 +365,58 @@ module webglExp {
             this._angleXToGo = this._camBaseAngle.y;
             this._angleYToGo = this._camBaseAngle.x;
             this._keyControls = new utils.GameKeyBoardControl(this.keydown, this.keyup);
+
+            var lightFolder = this._gui.addFolder("Light Position");
+            lightFolder.add(this._uniforms.light.value, 'x', -10000, 10000);
+            lightFolder.add(this._uniforms.light.value, 'y', -10000, 10000);
+            lightFolder.add(this._uniforms.light.value, 'z', -10000, 10000);
+
+            this.setComposers();
+            this.setComposerPasses();
 		}
+
+        setComposers() {
+            var w: number = this._terrainSize.x / 4;
+            var h: number = this._terrainSize.y / 4;
+
+            var renderTargetParamsBumps = {    minFilter: THREE.LinearFilter,
+                                                magFilter: THREE.LinearFilter, 
+                                                format: THREE.RGBAFormat,
+                                                stencilBuffer: false,
+                                                depthBuffer: false };
+
+            var rtbumps:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(w, h, renderTargetParamsBumps);
+            this._bumpComposer = new THREE.EffectComposer(this._renderer, rtbumps);
+            this._uniforms.bumpMat.value = this._bumpComposer.renderTarget2;
+
+            this._composerLandscape = new webglExp.EffectComposer(this._renderer, this._scene, this._camera, Scene3D.WIDTH, Scene3D.HEIGHT);
+
+        } 
+
+        setComposerPasses() {
+            var bumpFolder = this._gui.addFolder('bumps');
+
+            var copyPass = new THREE.ShaderPass(<any>THREE.CopyShader);
+
+            // Bump map composer
+            this._bumpPass = new THREE.ShaderPass( <any>THREE.BumpMapShader );
+            
+            bumpFolder.add(this._bumpPass.uniforms["noisePond"], 'value', 0.00001, 10000.0).name('noisePond');
+            bumpFolder.add(this._bumpPass.uniforms["uH"], 'value', -4.0, 4.0).name('uH').step(0.05);
+            bumpFolder.add(this._bumpPass.uniforms["uLacunarity"], 'value', 0.0, 5.0).name('uLacunarity').step(0.05);
+            this._bumpComposer.addPass(this._bumpPass);
+            this._bumpComposer.addPass(copyPass);
+
+
+
+            // Render scenes
+            var renderLandscape = new THREE.RenderPass(this._scene, this._camera);
+
+            var copyPass2 = new THREE.ShaderPass(<any>THREE.CopyShader);
+            copyPass2.renderToScreen = true;
+            this._composerLandscape.addPass(renderLandscape);
+            this._composerLandscape.addPass(copyPass2);
+        }
 
         keydown = (key:string) => {
             switch (key) {
@@ -459,9 +530,8 @@ module webglExp {
             return planeGeom;
         }
 
-
-
 		render() {
+
             this._uniforms.time.value += 0.01;
 
             this._speedX += (this._speedXToGo - this._speedX) * 0.1;
@@ -469,6 +539,11 @@ module webglExp {
 
             this._uniforms.scroll.value.y -= this._speedY;
             this._uniforms.scroll.value.x += this._speedX;
+
+            var xscroll: number = this._uniforms.scroll.value.x / (this._terrainSize.x);
+            var yscroll: number = this._uniforms.scroll.value.y / (this._terrainSize.y);
+
+            this._bumpPass.uniforms['scroll'].value.set(xscroll, yscroll);
 
             this._snowField.setScroll(this._uniforms.scroll.value);
             this._snowField.render();
@@ -483,11 +558,18 @@ module webglExp {
                 this._countFrames++;
             }
 
+            this._bumpComposer.render();
+            this._composerLandscape.getComposer().render();
+
 			super.render();
 		}
 
         resize() {
             super.resize();
+            this._bumpComposer.setSize(this._terrainSize.x / 4, this._terrainSize.y / 4);
+            this._uniforms.bumpMat.value = this._bumpComposer.renderTarget2;
+
+            this._composerLandscape.getComposer().setSize(Scene3D.WIDTH, Scene3D.HEIGHT);
         }
 	}
 }

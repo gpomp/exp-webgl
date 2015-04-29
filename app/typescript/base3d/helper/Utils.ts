@@ -1,6 +1,30 @@
 /// <reference path="../../../../typings/threejs/three.d.ts" />
+/// <reference path="../core/Scene3D.ts" />
 
 module utils {
+
+    export class Utils3D {
+        constructor() {}
+
+        static toScreenPosition(obj:THREE.Object3D, camera:THREE.PerspectiveCamera)
+        {
+            var vector:THREE.Vector3 = new THREE.Vector3();
+
+            var widthHalf = 0.5 * webglExp.Scene3D.WIDTH;
+            var heightHalf = 0.5 * webglExp.Scene3D.HEIGHT;
+
+            obj.updateMatrixWorld(false);
+            vector.setFromMatrixPosition(obj.matrixWorld);
+            vector.project(camera);
+
+            vector.x = ( vector.x + 1 ) * widthHalf / webglExp.Scene3D.WIDTH;
+            vector.y = ( vector.y + 1 ) * heightHalf / webglExp.Scene3D.HEIGHT;
+
+            return vector;
+
+        }
+    }
+
     export class Video2Canvas {
 
         public isDrawing: boolean;
