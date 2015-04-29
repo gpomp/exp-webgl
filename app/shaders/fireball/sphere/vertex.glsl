@@ -15,8 +15,12 @@ const float M_PI = 3.1415926535897932384626433832795;
 void main() {
 	vUv = uv * textSize;
     pos = position;
-    pos += normal.xyz * vec3(mousePos.xy, (mousePos.x + mousePos.y) * 0.5) * 50.0;
     stagePos = modelMatrix * vec4(pos,1.0);
+    float distVX = mousePos.x - pos.x;
+    float distVY = mousePos.y - (-pos.y);
+    float distMouse = distVX * distVX + distVY * distVY;
+    float perc = 1.0 - max(0.0, min(1.0, distMouse / 5000.0));
+    pos += normal.xyz * vec3(perc * 60.0);
   	gl_Position = projectionMatrix *
                 modelViewMatrix *
                 vec4(pos,1.0);  

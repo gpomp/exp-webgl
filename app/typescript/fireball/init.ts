@@ -153,9 +153,9 @@ module webglExp {
         onMouseMove = (event:MouseEvent) => {
             var w: number = Scene3D.WIDTH;
             var h: number = Scene3D.HEIGHT;
-            var x: number = (event.clientX - w * .5) / (w * .5);
-            var y: number = (event.clientY - h * .5) / (h * .5);
-            this._mousePos.set(Math.abs(x), Math.abs(y));
+            var x: number = (event.clientX - w * .5);
+            var y: number = (event.clientY - h * .5);
+            this._mousePos.set(x, y);
         }
 
         setComposers() {
