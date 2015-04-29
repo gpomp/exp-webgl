@@ -15,7 +15,6 @@ module THREE {
 
         static fragmentShader = SHADERLIST.bumpMap.fragment;
     }
-
     export class CopyShader {
         static uniforms = {
             "tDiffuse":     { type: "t", value: THREE.ImageUtils.generateDataTexture(4, 4, new THREE.Color(0x000000)) },

@@ -199,7 +199,7 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
-            this._terrainSize = new THREE.Vector2(Scene3D.WIDTH * 3, Scene3D.WIDTH * 3);
+            this._terrainSize = new THREE.Vector2(1920 * 3, 1920 * 3);
 
 
             var grassTexture: THREE.Texture = THREE.ImageUtils.loadTexture('../img/landscape/grass.jpg');

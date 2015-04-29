@@ -151,8 +151,8 @@ module webglExp {
 		}
 
         onMouseMove = (event:MouseEvent) => {
-            var w: number = Scene3D.WIDTH;
-            var h: number = Scene3D.HEIGHT;
+            var w: number = window.innerWidth;
+            var h: number = window.innerHeight;
             var x: number = (event.clientX - w * .5);
             var y: number = (event.clientY - h * .5);
             this._mousePos.set(x, y);

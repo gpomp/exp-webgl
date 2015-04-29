@@ -20,8 +20,10 @@ declare module webglExp {
         private scroll;
         private frame;
         private body;
+        private _resolution;
         constructor(shaderLoadedCB: Function);
         shaderLoaded: (data: any) => void;
+        swithResolution: (event: MouseEvent) => void;
         getScene(): THREE.Scene;
         getCamera(): THREE.PerspectiveCamera;
         getRenderer(): THREE.WebGLRenderer;
