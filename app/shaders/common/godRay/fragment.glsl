@@ -13,15 +13,13 @@ uniform float density;
 uniform float weight;
 uniform float illuminationDecay;
 uniform float radiusLight;
+uniform vec2 lightPos;
 
 varying vec2 vUv;
 
 vec4 godRay(sampler2D text, vec2 uv) {
 	float exposure	= exposureNB / float(NUM_SAMPLES);
-	// vec2 distFromMiddle = uv - vec2(0.5, 0.5);
-	// float distSquare = distFromMiddle.x * distFromMiddle.x + distFromMiddle.y * distFromMiddle.y;
-	// float maxDist = radiusLight * radiusLight + radiusLight * radiusLight;
-  	vec2 deltaTextCoord = uv - vec2(0.5, 0.5);
+  	vec2 deltaTextCoord = uv - lightPos;
 	vec2 textCoo = uv;
 	deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;
 
@@ -46,9 +44,6 @@ vec4 godRay(sampler2D text, vec2 uv) {
 }
 
 void main() {
-	vec4 ontop = texture2D(tDiffuse1, vUv);
-	float b = (ontop.r + ontop.g + ontop.b) / 3.0;
-
 	vec4 gr = godRay(tDiffuse, vUv);
   	gl_FragColor = gr;
 }
