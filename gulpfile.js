@@ -295,8 +295,8 @@ gulp.task('devconfig', function () {
 });
 
 gulp.task('common', function(callback) {
-    runSequence( 'base-3d-includes', 'base-3d-code', 'font', ['less', 'compileprojects'] );
+    runSequence( 'base-3d-code', 'font', ['less', 'compileprojects'] );
 });
 
 gulp.task('dev',['devconfig', 'common', 'connect', 'watch']);
-gulp.task('default',['common']);
+gulp.task('default', ['base-3d-includes', 'common']);
