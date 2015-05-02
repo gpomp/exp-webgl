@@ -31,7 +31,7 @@ module webglExp {
             this._camera = camera;
             this._renderer = renderer;
 
-            this._currSRC = '../img/save/test-ink.jpg';
+            this._currSRC = '../img/vol_ink/drawing.jpg';
 
             this._imgloaded = false;
 
