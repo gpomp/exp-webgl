@@ -94,7 +94,7 @@ module webglExp {
 
             this._countSource = 0;
 
-            for (var i = 0; i < 20; ++i) {
+            for (var i = 0; i < 15; ++i) {
                 this._uniforms.source.value.push(new THREE.Vector3(0, 0, 0));
             }
 
@@ -150,7 +150,7 @@ module webglExp {
             var w: number = window.innerWidth;
             var h: number = window.innerHeight;
 
-            this._countSource = this._countSource === 19 ? 0 : this._countSource + 1;
+            this._countSource = this._countSource === 14 ? 0 : this._countSource + 1;
             var xcap: number = Math.max(-512, Math.min(512, (event.clientX - w * .5)));
             var ycap: number = Math.max(-512, Math.min(512, (event.clientY - h * .5)));
             var x: number = ((xcap) / 512 + 1) * 0.5;

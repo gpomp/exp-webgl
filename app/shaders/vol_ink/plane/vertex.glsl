@@ -3,25 +3,23 @@ precision highp float;
 #endif
 
 #pragma glslify: noise = require(../../../../node_modules/glsl-noise/classic/3d)
-#pragma glslify: noise2d = require(../../../../node_modules/glsl-noise/classic/2d)
 
 uniform sampler2D inkText;
-uniform vec3 source[20];
+uniform vec3 source[15];
 uniform float time;
 
 varying vec4 stagePos;
-varying vec4 texelInk;
 varying vec3 pos;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec2 paperUv;
 varying float colV;
 
-const int NB_SOURCE = 20;
+const int NB_SOURCE = 15;
 const float M_PI = 3.1415926535897932384626433832795;
 
-float getSource(vec3 src, vec2 uvs, vec2 noiseUV, vec4 texel, float globNoise) {
-	float n = (noise(vec3(noiseUV.x, noiseUV.y, (texel.r * globNoise * src.z * 0.1))) + 1.0) * 0.2;
+float getSource(vec3 src, vec2 uvs, vec2 noiseUV, vec4 texel, float globNoise, float n) {
+	
 
 	uvs.x += cos((texel.r + n + globNoise * 5.0)) * ((src.x - uvs.x) * n);
 	uvs.y += sin((texel.r + n - globNoise * 10.0)) * ((src.y - uvs.y) * n);
@@ -44,15 +42,16 @@ void main() {
 	vec2 rText = vec2(1024.0 / 256.0);
 	paperUv = uv * rText;
 
+	vec2 noiseUV = vUv * 30.0;
+
 	float globNoise = (noise(vec3(pos.x / 50.0, pos.y / 50.0, 0.1)) + 1.0) * 0.3;
 	//
 	vec4 texel = texture2D(inkText, vUv);
-	texelInk = texel;
+	float n = (noise(vec3(noiseUV.x, noiseUV.y, (texel.r * globNoise * 0.1))) + 1.0) * 0.2;
 
 	colV = 0.0;
-
 	for(int i = 0; i < NB_SOURCE; i++) {
-		colV = min(1.0, max(getSource(source[i], vUv, vUv * 30.0, texel, globNoise), colV));
+		colV = min(1.0, max(getSource(source[i], vUv, noiseUV, texel, globNoise, n), colV));
 		
 
 	}    

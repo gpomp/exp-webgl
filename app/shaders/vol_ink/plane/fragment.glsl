@@ -6,7 +6,6 @@ uniform sampler2D inkText;
 uniform sampler2D paperText;
 
 varying vec4 stagePos;
-varying vec4 texelInk;
 varying vec3 pos;
 varying vec3 vNormal;
 varying vec2 vUv;
