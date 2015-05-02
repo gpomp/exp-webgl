@@ -76,10 +76,12 @@ module webglExp {
 
 			this.shaderLoadedCB(this);
 
-            document.getElementById('switch-resolution').addEventListener('click', this.swithResolution);
+            // document.getElementById('switch-resolution').addEventListener('click', this.swithResolution);
+
+            window.setTimeout(this.checkPerf, 5000);
 		}
 
-        swithResolution = (event:MouseEvent) => {
+        /*swithResolution = (event:MouseEvent) => {
             event.preventDefault();
             this._resolution = (this._resolution === 1) ? 1.5 : 1;
             if(this._resolution === 1) {
@@ -89,7 +91,7 @@ module webglExp {
             }
 
             this.resize();
-        } 
+        } */
 
 		getScene():THREE.Scene {
 			return this.scene;
@@ -119,7 +121,22 @@ module webglExp {
 			}
 			
 			this.stats.end();
-			
+		}
+
+		checkPerf = () => {
+            var t: string = (<HTMLElement>document.getElementById('stats').querySelector('#fpsText')).textContent;
+            var fps = parseInt(t.split(' FPS')[0]);
+
+            if(this._resolution < 1.6 && fps < 30) {
+                this._resolution += 0.1;
+                this.resize();
+                window.setTimeout(this.checkPerf, 2000);
+            }
+
+            console.log('fps', fps, this._resolution);
+
+
+            
 		}
 
 		leaveAnimation = (event:CustomEvent) => {

@@ -23,12 +23,12 @@ declare module webglExp {
         private _resolution;
         constructor(shaderLoadedCB: Function);
         shaderLoaded: (data: any) => void;
-        swithResolution: (event: MouseEvent) => void;
         getScene(): THREE.Scene;
         getCamera(): THREE.PerspectiveCamera;
         getRenderer(): THREE.WebGLRenderer;
         setAnim(a: webglExp.GLAnimation): void;
         render: () => void;
+        checkPerf: () => void;
         leaveAnimation: (event: CustomEvent) => void;
         resize(): void;
     }

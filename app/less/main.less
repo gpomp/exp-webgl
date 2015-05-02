@@ -1,4 +1,5 @@
 @import "generated/glyph.less"; 
+@import "vars.less"; 
 
 html {
 	height: 100%;
@@ -12,6 +13,7 @@ body {
 	background-color: black;
 	height: 100%;
 	font-family: 'Lato', sans-serif;
+
 	&, & * {
 		box-sizing: border-box;
 	}
@@ -50,6 +52,18 @@ body {
 		transition-delay: @i / 20 * 1s;
 	}
 	.button-delay-loop(@n, (@i + 1));
+}
+
+#stats {
+	@media @m {
+		display: none;
+	}
+}
+
+body .dg.a {
+	@media @m {
+		margin-right: 0;
+	}
 }
 
 #not-supported {
@@ -101,6 +115,11 @@ body {
 	transform: translate(-296px, 0);
 
 	transition: transform 0.3s ease-in;
+
+	@media @m {
+		width: 200px;
+		transform: translate(-198px, 0);
+	}
 
 	body.not-supported & {
 		display: none;
@@ -405,6 +424,9 @@ body {
 		float: left;
 		z-index: 3;
 		pointer-events: none;
+		@media @m {
+			width: 100%;
+		}
 		#show-infos {
 			pointer-events: all;
 			position: relative;
@@ -472,6 +494,10 @@ body {
 			font-size: 120%;
 			text-decoration: none;
 			border-bottom: 1px solid white;
+
+			@media @m {
+				float: right;
+			}
 
 			&:hover {
 				border-color: transparent;

@@ -26,7 +26,7 @@ module webglExp {
 			this.callback = callback;
 			this.siteReady = false;
             this.deviceType();
-			if (webglExp.Detector.isWebGL() && Site.activeDeviceType !== 'touch') {
+			if (webglExp.Detector.isWebGL()) {
 				this.configWebgl();
 			} else {
                 (<HTMLElement>document.getElementById('not-supported')).classList.add('show');

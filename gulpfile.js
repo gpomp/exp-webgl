@@ -39,8 +39,7 @@ var config = {
 gulp.task('connect', function() {
   connect.server({
     root: 'public',
-    livereload: true,
-    host: '0.0.0.0'
+    host: '*'
   });
 });
 
