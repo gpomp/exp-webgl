@@ -5,14 +5,18 @@ precision highp float;
 uniform sampler2D inkText;
 uniform sampler2D inkspillText;
 
+attribute vec3 rand;
+
 varying vec4 stagePos;
 varying vec3 pos;
 varying vec3 vNormal;
+varying vec3 randoms;
 varying vec2 vUv;
 varying vec2 paperUv;
 varying float colV;
 
 void main() {
+	randoms = rand;
 	vNormal = normal;
     pos = position;
 	vUv = uv;

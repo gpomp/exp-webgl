@@ -7,6 +7,7 @@ precision highp float;
 uniform sampler2D inkText;
 uniform sampler2D paperText;
 uniform sampler2D inkspillText;
+uniform float time;
 
 varying vec4 stagePos;
 varying vec3 pos;
@@ -14,6 +15,7 @@ varying vec3 vNormal;
 varying vec2 vUv;
 varying vec2 paperUv;
 varying float colV;
+varying vec3 randoms;
 
 void main() {
 	vec4 texel = texture2D(inkText, vUv);
@@ -24,7 +26,7 @@ void main() {
 	vec2 distXY = vec2(vUv.x - 0.5, vUv.y - 0.5);
 
 	float dist = 1.0 - (distXY.x * distXY.x + distXY.y * distXY.y) / 2.0;
-
+	float cosTime = cos(time + randoms.z * 1000.0);
 
 
 	vec2 noiseUV = vUv * 30.0;
@@ -35,8 +37,8 @@ void main() {
 
 	vec2 modUV = vUv;
 
-	modUV.x += n + cos((vUv.x + globNoise * colV)) * (globNoise * n * colV);
-	modUV.y += n + sin((vUv.y - globNoise * colV)) * (n * colV);
+	modUV.x += n + cos((vUv.x + globNoise * colV + time * randoms.x * 1000.0)) * (globNoise * n * colV * cosTime * 0.05);
+	modUV.y += n + sin((vUv.y - globNoise * colV + time * randoms.y * 1000.0)) * (n * colV * cosTime * 0.01);
 
 
 

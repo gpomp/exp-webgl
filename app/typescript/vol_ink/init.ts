@@ -137,6 +137,10 @@ module webglExp {
             this._uniforms.inkspillText.value = this._textComposer.renderTarget1;
 
             this._attributes = {
+                rands: {
+                    type: 'v3',
+                    value: null
+                }
             };
 
             this._countSource = 0;
@@ -174,17 +178,23 @@ module webglExp {
             var ar = planeGeom.getAttribute('position').array;
             var aruv = planeGeom.getAttribute('uv').array;
 
+            var rands = new Float32Array( geomLength * 3 );
+
             for (var i = 0; i < geomLength; ++i) {
                 var x: number = Math.floor( aruv[offset2 + 0] * planeSize1);
                 var y: number = Math.floor( (1 - aruv[offset2 + 1]) * planeSize1);
                 var dataLoc = Math.floor(y * planeSize + x) * 4;
 
                 ar[offset + 2] = imgD[dataLoc] / 255 * -10.0;
-
+                rands[offset + 0] = Math.random();
+                rands[offset + 1] = Math.random();
+                rands[offset + 2] = Math.random();
 
                 offset += 3;
                 offset2 += 2;
             }
+
+            planeGeom.addAttribute( 'rands', new THREE.BufferAttribute( rands, 3 ) );
 
             planeGeom.computeVertexNormals();
 
