@@ -1,12 +1,16 @@
 /// <reference path="../../../typings/threejs/three.d.ts" />
 /// <reference path="../definitions/core/GLAnimation.d.ts" />
 /// <reference path="../definitions/Site.d.ts" />
+/// <reference path="addons.ts" />
 /// <reference path="../../../typings/greensock/greensock.d.ts" />
 
 declare var SHADERLIST;
 
 module webglExp {
     export class VolInk extends webglExp.GLAnimation {
+
+        static NBSOURCE: number = 4;
+
         private _scene: THREE.Scene;
         private _camera: THREE.PerspectiveCamera;
         private _renderer: THREE.WebGLRenderer;
@@ -23,6 +27,12 @@ module webglExp {
 
         private _gui;
         private _currSRC:string;
+
+        private _textComposer;
+        private _inkComposer;
+        private _addComposer;
+        private _inkPass;
+        private _addPass;
 
 
         constructor(scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, href?: string) {
@@ -62,6 +72,26 @@ module webglExp {
         imgLoaded = (event) => {
             console.log('img loaded', this._img.src);
 
+            var renderTargetParamsText = {    minFilter: THREE.LinearFilter,
+                                                magFilter: THREE.LinearFilter, 
+                                                format: THREE.RGBAFormat,
+                                                stencilBuffer: false,
+                                                depthBuffer: false };
+
+            var rttext:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, renderTargetParamsText);
+
+            this._textComposer = new THREE.EffectComposer(this._renderer, rttext);
+
+            var rtink:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, renderTargetParamsText);
+
+            this._inkComposer = new THREE.EffectComposer(this._renderer, rtink);
+
+            var rtadd:THREE.WebGLRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, renderTargetParamsText);
+
+            this._addComposer = new THREE.EffectComposer(this._renderer, rtadd);
+
+            this._renderer.clear();
+
             this._imgloaded = true;
             var text: THREE.Texture = THREE.ImageUtils.loadTexture(this._img.src);
 
@@ -74,6 +104,10 @@ module webglExp {
                     type: 'f',
                     value: 0.0
                 },
+                inkspillText: {
+                    type: 't',
+                    value:null
+                },
                 inkText: {
                     type: 't',
                     value:text
@@ -81,21 +115,36 @@ module webglExp {
                 paperText: {
                     type: 't',
                     value:paperT
-                },
-
-                source: {
-                    type: 'v3v',
-                    value:[]
                 }
             }
+
+            var copyPass = new THREE.ShaderPass(<any>THREE.CopyShader);
+
+            this._inkPass = new THREE.ShaderPass(<any>THREE.InkShader);
+            this._inkPass.uniforms["inkText"].value = text;
+            this._inkComposer.addPass(this._inkPass);
+
+            this._addPass = new THREE.ShaderPass(<any>THREE.AddShader);
+            this._addPass.uniforms['tDiffuse2'].value = this._inkComposer.renderTarget1;
+            this._addPass.uniforms['tDiffuse1'].value = this._addComposer.renderTarget2;
+            this._addComposer.addPass(this._addPass);
+            this._addComposer.addPass(copyPass);
+
+            var addPass1 = new THREE.ShaderPass(<any>THREE.AddShader);
+            addPass1.uniforms['tDiffuse2'].value = this._addComposer.renderTarget2;
+            this._textComposer.addPass(addPass1);
+
+            this._uniforms.inkspillText.value = this._textComposer.renderTarget1;
 
             this._attributes = {
             };
 
             this._countSource = 0;
 
-            for (var i = 0; i < 15; ++i) {
-                this._uniforms.source.value.push(new THREE.Vector3(0, 0, 0));
+            for (var i = 0; i < VolInk.NBSOURCE; ++i) {
+                // this._uniforms.source.value.push(new THREE.Vector3(0, 0, 0));
+
+                this._inkPass.uniforms['source'].value.push(new THREE.Vector3(0, 0, 0));
             }
 
             var planeMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
@@ -109,7 +158,7 @@ module webglExp {
             var planeSize: number = 1024;
             var planeSize1: number = planeSize - 1;
 
-            var planeGeom: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(planeSize, planeSize, 400, 400);
+            var planeGeom: THREE.PlaneBufferGeometry = new THREE.PlaneBufferGeometry(planeSize, planeSize, 500, 500);
             
             var geomLength: number = Math.floor(planeGeom.getAttribute('position').length / 3);
             var offset: number = 0;
@@ -142,6 +191,9 @@ module webglExp {
             this._mesh = new THREE.Mesh(planeGeom, planeMat);
             this._scene.add(this._mesh);
             this._camera.lookAt(this._mesh.position);
+            this._camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
         }
 
         addSource = (event:MouseEvent) => {
@@ -150,15 +202,19 @@ module webglExp {
             var w: number = window.innerWidth;
             var h: number = window.innerHeight;
 
-            this._countSource = this._countSource === 14 ? 0 : this._countSource + 1;
+            this._countSource = (this._countSource === VolInk.NBSOURCE - 1) ? 0 : this._countSource + 1;
             var xcap: number = Math.max(-512, Math.min(512, (event.clientX - w * .5)));
             var ycap: number = Math.max(-512, Math.min(512, (event.clientY - h * .5)));
             var x: number = ((xcap) / 512 + 1) * 0.5;
             var y: number = (-(ycap) / 512 + 1) * 0.5;
-            console.log(x, y);
-            this._uniforms.source.value[this._countSource].set(x, y, 0);
+            this._inkPass.uniforms['source'].value[this._countSource].set(x, y, 0);
 
-            TweenLite.to(this._uniforms.source.value[this._countSource], 15, { z: 1, ease: Expo.easeOut });
+            TweenLite.to(this._inkPass.uniforms['source'].value[this._countSource], 15, { z: 1, ease: Expo.easeOut,
+                onComplete: this.onSourceDone, overwrite:"all" });
+
+        }
+
+        onSourceDone = () => {
 
         }
 
@@ -167,6 +223,11 @@ module webglExp {
 			super.render();
             if(this._imgloaded) {
                 this._uniforms.time.value += 0.01;
+
+                this._inkComposer.render();
+                this._addComposer.render();
+                this._textComposer.render();
+
             }
 		}
 
