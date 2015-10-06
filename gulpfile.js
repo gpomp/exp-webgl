@@ -281,12 +281,38 @@ gulp.task('watch', function () {
                 });
 
     // HTML
-    gulp.watch([config.app + 'handlebars/*.handlebars', config.app + 'handlebars/partials/*.handlebars'], function(obj) {
+    gulp.watch([
+            config.app + 'handlebars/*.handlebars', 
+            config.app + 'handlebars/partials/*.handlebars'], function(obj) {
         var p = path.basename(obj.path, '.handlebars');
         argv.currentname = p; 
         runSequence('localhandlebars'); 
     });
 });
+
+
+// Copy all folder/files to create a new project. Launch with --pname=yourprojectname
+gulp.task('createproject', function() {
+    console.log("new project", argv.pname);
+    var n = argv.pname;
+    // Copy and rename handlebars
+    gulp.src(config.app + "handlebars/cubeExample.handlebars")
+    .pipe(rename(n + ".handlebars"))
+    .pipe(gulp.dest(config.app + "handlebars"));
+
+    // less
+    gulp.src(config.app + "less/cubeExample/**/*")
+    .pipe(gulp.dest(config.app + "less/" + n));
+
+    // shaders
+    gulp.src(config.app + "shaders/cubeExample/**/*")
+    .pipe(gulp.dest(config.app + "shaders/" + n));
+
+    // typescript
+    gulp.src(config.app + "typescript/cubeExample/**/*")
+    .pipe(gulp.dest(config.app + "typescript/" + n));
+
+})
 
 gulp.task('devconfig', function () {
     console.log('set env as dev...');
