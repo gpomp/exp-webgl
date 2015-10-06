@@ -70,6 +70,7 @@ declare module THREE {
         private yVector;
         oldOr: THREE.Vector2;
         private lastPos;
+        private _isMouseDown;
         constructor(object: THREE.Object3D);
         clear(): void;
         onMouseDown: (event: any) => void;

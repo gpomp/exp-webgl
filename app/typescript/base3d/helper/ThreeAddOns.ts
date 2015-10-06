@@ -199,8 +199,11 @@ module THREE {
 
 	  	private lastPos:THREE.Vector2;
 
+        private _isMouseDown: boolean;
+
 		constructor(object:THREE.Object3D) {
-			this.enabled = false;
+            this.enabled = false;
+			this._isMouseDown = false;
 			this.orientation = {
 			    x: 0,
 			    y: 0,
@@ -239,17 +242,19 @@ module THREE {
 		}
 
 		onMouseDown = (event) => {
+            this._isMouseDown = true;
 			var t = (event.touches && event.touches.length > 0) ? event.touches[0] : event;
 			this.lastPos = new THREE.Vector2(t.clientX, t.clientY);
-			(<HTMLElement>document.querySelectorAll(".drag-instruction").item(0)).classList.remove("show");
 			(<HTMLElement>document.querySelectorAll("body").item(0)).classList.add("drag");
 		}
 
 		onMouseUp = (event) => {
+            this._isMouseDown = false;
 			(<HTMLElement>document.querySelectorAll("body").item(0)).classList.remove("drag");
 		}
 
-		onMouseMove = (event) => {			if ( this.enabled === false ) return;
+		onMouseMove = (event) => {			
+            if ( this.enabled === false || !this._isMouseDown) return;
 
 			var t = (event.touches && event.touches.length > 0) ? event.touches[0] : event;
 
