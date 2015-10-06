@@ -30,6 +30,7 @@ declare module utils {
         canplay: () => void;
         getSound(): void;
         drawCanvas: () => void;
+        getVideo(): HTMLVideoElement;
         getCanvas(): HTMLCanvasElement;
         render(isSpectrum?: boolean): void;
         renderDiff(): void;

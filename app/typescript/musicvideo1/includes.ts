@@ -1,4 +1,6 @@
 /// <reference path='../../../typings/node/node.d.ts' />
+/// 
+declare var THREE;
 
 var glslify = require('glslify');
 
@@ -10,11 +12,11 @@ var gFragment = glslify('./../../shaders/common/glow/fragment.glsl');
 
 var pcVertex = glslify('./../../shaders/musicvideo1/pointcloud/vertex.glsl');
 var pcFragment = glslify('./../../shaders/musicvideo1/pointcloud/fragment.glsl');
-
+ 
 var cVertex = glslify('./../../shaders/common/copy/vertex.glsl');
 var cFragment = glslify('./../../shaders/common/copy/fragment.glsl');
 
-
+require('three-fly-controls')(THREE);
 
 window['SHADERLIST'] = {
     pointcloud: {

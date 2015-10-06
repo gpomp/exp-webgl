@@ -1,8 +1,7 @@
+
 #ifdef GL_ES
 precision highp float;
 #endif
-
-const float NUM_SAMPLES = 50.0 ;
 
 uniform sampler2D tDiffuse1;
 uniform sampler2D tDiffuse2;

@@ -8,3 +8,23 @@
 #project-infos .bg {
 	background: rgba(207, 0, 180, 0.7);
 }
+
+.tips {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: black;
+    color: white;
+    font-size: 140%;
+    text-transform: uppercase;
+    padding: 10px;
+    transition: all 0.3s ease-out;
+    visibility: hidden;
+    opacity: 0;
+    &.show {
+        transition: all 0.3s ease-out;
+        visibility: visible;
+        opacity: 1;
+    }
+}

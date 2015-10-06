@@ -14,8 +14,8 @@ module webglExp {
 			document.addEventListener("keyup", this.keyup);
 		}
 
-		private keyup(event) {
-			if(event.which === 68) {
+		private keyup(event) { 
+			if(event.which === 72) {
 				(<HTMLElement>document.querySelectorAll("div.dg.main").item(0)).classList.toggle("show");
 				(<HTMLElement>document.querySelectorAll("#stats").item(0)).classList.toggle("show");
 

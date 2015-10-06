@@ -138,6 +138,10 @@ module utils {
             
         }
 
+        getVideo():HTMLVideoElement {
+            return this._videoEl;
+        }
+
         getCanvas():HTMLCanvasElement {
             return this._canvas;
         }

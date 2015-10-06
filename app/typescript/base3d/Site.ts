@@ -38,13 +38,13 @@ module webglExp {
 
         configSite() {
             this._expMenu = document.getElementById('exp-menu');
-            this._expMenuTip = <HTMLElement>this._expMenu.querySelector('.tip a');
+            // this._expMenuTip = <HTMLElement>this._expMenu.querySelector('.tip a');
             this._footer = <HTMLElement>document.querySelector('.footer-bottom');
-            this._showInfoBtn = document.getElementById('show-infos');
+            // this._showInfoBtn = document.getElementById('show-infos');
             this._infos = document.getElementById('project-infos');
 
-            this._expMenuTip.addEventListener('click', this.toggleMenu);
-            this._showInfoBtn.addEventListener('click', this.toggleInfo);
+            // this._expMenuTip.addEventListener('click', this.toggleMenu);
+            // this._showInfoBtn.addEventListener('click', this.toggleInfo);
         }
 
         toggleMenu = (event:MouseEvent) => {
