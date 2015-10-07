@@ -19,8 +19,6 @@ module webglExp {
 
     export class Swarm extends THREE.Line {
 
-        public static NB_VERTS: number;
-
         private _time: number;
         private _dir: number;
         private _speed: number;
@@ -33,9 +31,8 @@ module webglExp {
         public shaderMat: THREE.ShaderMaterial;
 
 
-        constructor(geom:THREE.BufferGeometry, mat:THREE.ShaderMaterial, radius:number, dir:number, nbVertices:number) {
+        constructor(geom:THREE.BufferGeometry, mat:THREE.ShaderMaterial, radius:number, dir:number) {
             super(geom, mat);
-            Swarm.NB_VERTS = nbVertices;
             this._dir = dir;
             this._time = 0;
             this._speed = 0.0005 + Math.random() * 0.0005;
@@ -126,7 +123,8 @@ module webglExp {
         private _camPosList;
         private _inTransition: boolean;
         private _transCamPos: THREE.Vector3;
-        private _transCamLook: THREE.Vector3;
+        private _transCamRot: THREE.Euler;
+        private _transCamUp: THREE.Vector3;
 
         private _tipHide: number;
         private _animTime: number;
@@ -135,12 +133,13 @@ module webglExp {
 
         private _lineAlpha;
 
+        private _verticesX: number;
+        private _verticesY: number;
+
 
         private _swarm: webglExp.Swarm;
 
         private _swarmList: webglExp.Swarm[];
-
-        // private mouseControl: THREE.Mouse2DControls;
 
         private _composerBloom:webglExp.EffectComposer;
         private _composer:webglExp.EffectComposer;
@@ -151,7 +150,6 @@ module webglExp {
 
 		constructor(scene:THREE.Scene, camera:THREE.PerspectiveCamera, renderer:THREE.WebGLRenderer, href?:string) {
 			super(scene, camera, renderer);
-            // super.setInternalRender(true);
             this._scene = scene;
             this._camera = camera;
             this._renderer = renderer;
@@ -163,11 +161,122 @@ module webglExp {
 
             this._gui = super.getGui().get_gui();
 
+            this._verticesX = 320;
+            this._verticesY = 520;
+
+            var geom: THREE.BufferGeometry = this.createLineGeometry(this._verticesX, this._verticesY);
+
+            this._swarmList = [];
+            var startRad: number = 400;
+            var dir = 1; 
+            for (var i = 0; i < 1; ++i) {
+                
+                var pcMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
+                    vertexShader: SHADERLIST.pointcloud.vertex,
+                    fragmentShader: SHADERLIST.pointcloud.fragment,
+                    transparent:true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite : false,
+                    depthTest : false,
+                    linewidth: 1
+
+                }); 
+ 
+                var swarm:webglExp.Swarm = new webglExp.Swarm(geom, pcMat, startRad, dir);
+                this._scene.add(swarm);
+                this._swarmList.push(swarm);
+                startRad -= 50;
+                dir *= -1;
+            }
+
+            this._fpc = new THREE["FlyControls"](this._camera, document.getElementById("three-canvas"));
+
+            this._camPosList = [];
+
+            this._lookAtCenter = false;
+
+            this._animTime = 3;
+            this._animEase = Expo.easeInOut;
+            this._animEaseLabel = "expoInOut";
+
+            this._gui.add(this, "restartVideo");
+
+            var cameraFolder = this._gui.addFolder('Camera settings');
+            cameraFolder.add(this, "_lookAtCenter").name('look At Center');
+            cameraFolder.add(this, "_animTime", 0.0, 20.0).name("anim time");
+            cameraFolder.add(this, "_animEaseLabel").options( 'noEase', 'sineIn', 'sineOut', 'sineInOut', 'expoIn', 'expoOut', 'expoInOut', 'power2In', 'power2Out', 'power2InOut' ).onChange(() => {
+                switch (this._animEaseLabel) {
+                    case "noEase":
+                        this._animEase = Linear.easeNone;
+                        break;
+                    case "sineIn":
+                        this._animEase = Sine.easeIn;
+                        break;
+                    case "sineOut":
+                        this._animEase = Sine.easeOut;
+                        break;
+                    case "sineInOut":
+                        this._animEase = Sine.easeInOut;
+                        break;
+                    case "expoIn":
+                        this._animEase = Expo.easeIn;
+                        break;
+                    case "expoOut":
+                        this._animEase = Expo.easeOut;
+                        break;
+                    case "expoInOut":
+                        this._animEase = Expo.easeInOut;
+                        break;
+                    case "power2In":
+                        this._animEase = Power2.easeIn;
+                        break;
+                    case "power2Out":
+                        this._animEase = Power2.easeOut;
+                        break;
+                    case "power2InOut":
+                        this._animEase = Power2.easeInOut;
+                        break;
+                }
+             });
+
+            cameraFolder.add(this, "saveCamPos").name('Save Position');
+
+            cameraFolder.open();
+
+            var lineFolder = this._gui.addFolder('Line');
+            lineFolder.add(this, "_lineAlpha", 0, 1).name('alpha').step(0.01).onChange(() => {
+                for (var i = 0; i < this._swarmList.length; ++i) {
+                    this._swarmList[i].shaderMat.uniforms.lineAlpha.value = this._lineAlpha;
+                }
+            });
+
+            lineFolder.add(this, "_verticesX", 10, 900).name("Horizontal points").onChange(this.changeGeomNumber);
+            lineFolder.add(this, "_verticesY", 10, 900).name("Vertical points").onChange(this.changeGeomNumber);
+
+            lineFolder.open();
+
+            this.setComposers();
+            this.setComposerPasses();
+
+            this._camera.position.z = 500;
+            this._camera.lookAt(new THREE.Vector3(0));
+
+
+            document.addEventListener("keyup", this.keyup);
+            
+		}
+
+        changeGeomNumber = () => {
+            var geom = this.createLineGeometry(this._verticesX, this._verticesY);
+            for (var i = 0; i < this._swarmList.length; ++i) {
+                this._swarmList[i].geometry = geom;
+            }
+        }
+
+        createLineGeometry(vw: number, vh: number):THREE.BufferGeometry {
             var geom: THREE.BufferGeometry = new THREE.BufferGeometry();
             var w: number = 512;
             var h: number = 512; 
-            var vw: number = 320;
-            var vh: number = 520;
             var vW1: number = vw + 1;
             var vH1: number = vh + 1;
             var hw: number = w / 2;
@@ -228,113 +337,25 @@ module webglExp {
             geom.addAttribute( 'timeD', new THREE.BufferAttribute( timeD, 3 ) );
             geom.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
 
-            this._swarmList = [];
-            var startRad: number = 400;
-            var dir = 1; 
-            for (var i = 0; i < 1; ++i) {
-                
-                var pcMat: THREE.ShaderMaterial = new THREE.ShaderMaterial({
-                    vertexShader: SHADERLIST.pointcloud.vertex,
-                    fragmentShader: SHADERLIST.pointcloud.fragment,
-                    transparent:true,
-                    blending: THREE.AdditiveBlending,
-                    depthWrite : false,
-                    depthTest : false,
-                    linewidth: 1
-
-                }); 
- 
-                var swarm:webglExp.Swarm = new webglExp.Swarm(geom, pcMat, startRad, dir, vertices.length);
-                this._scene.add(swarm);
-                this._swarmList.push(swarm);
-                startRad -= 50;
-                dir *= -1;
-            }
-
-            this._fpc = new THREE["FlyControls"](this._camera, document.getElementById("three-canvas"));
-
-            this._camPosList = [];
-
-            this._lookAtCenter = false;
-
-            this._animTime = 3;
-            this._animEase = Expo.easeInOut;
-            this._animEaseLabel = "expoInOut";
-
-            this._gui.add(this, "restartVideo");
-
-            var cameraFolder = this._gui.addFolder('Camera settings');
-            cameraFolder.add(this, "_lookAtCenter").name('look At Center');
-            cameraFolder.add(this, "_animTime", 0.1, 6.0).name("anim time");
-            cameraFolder.add(this, "_animEaseLabel").options( 'sineIn', 'sineOut', 'sineInOut', 'expoIn', 'expoOut', 'expoInOut', 'power2In', 'power2Out', 'power2InOut' ).onChange(() => {
-                switch (this._animEaseLabel) {
-                    case "sineIn":
-                        this._animEase = Sine.easeIn;
-                        break;
-                    case "sineOut":
-                        this._animEase = Sine.easeOut;
-                        break;
-                    case "sineInOut":
-                        this._animEase = Sine.easeInOut;
-                        break;
-                    case "expoIn":
-                        this._animEase = Expo.easeIn;
-                        break;
-                    case "expoOut":
-                        this._animEase = Expo.easeOut;
-                        break;
-                    case "expoInOut":
-                        this._animEase = Expo.easeInOut;
-                        break;
-                    case "power2In":
-                        this._animEase = Power2.easeIn;
-                        break;
-                    case "power2Out":
-                        this._animEase = Power2.easeOut;
-                        break;
-                    case "power2InOut":
-                        this._animEase = Power2.easeInOut;
-                        break;
-                }
-             });
-
-            cameraFolder.add(this, "saveCamPos").name('Save Position');
-
-            cameraFolder.open();
-
-            var lineFolder = this._gui.addFolder('Line');
-            lineFolder.add(this, "_lineAlpha", 0, 1).name('alpha').step(0.01).onChange(() => {
-                for (var i = 0; i < this._swarmList.length; ++i) {
-                    this._swarmList[i].shaderMat.uniforms.lineAlpha.value = this._lineAlpha;
-                }
-            })
-            lineFolder.open();
-
-            this.setComposers();
-            this.setComposerPasses();
-
-            this._camera.position.z = 500;
-            this._camera.lookAt(new THREE.Vector3(0));
-
-
-            document.addEventListener("keyup", this.keyup);
-            
-		}
+            return geom;
+        }
 
         keyup = (event:KeyboardEvent) => {
             var key = parseInt(String.fromCharCode(event.which));
             if(!isNaN(key) && key < this._camPosList.length) {
 
                 this._transCamPos = this._camera.position.clone();
-                this._transCamLook = new THREE.Vector3( 0, 0, -1 );
-                this._transCamLook.applyMatrix4(this._camera.matrixWorld);
+                this._transCamRot = this._camera.rotation.clone();
+                this._transCamUp = this._camera.up.clone();
 
                 var np = this._camPosList[key];
                 TweenMax.killAll();
                 TweenMax.to(this._transCamPos, this._animTime, { x: np.pos.x, y: np.pos.y, z: np.pos.z, overwrite: "all", ease: this._animEase, onComplete: () => {
                     this._inTransition = false;
                 } });
-                TweenMax.to(this._transCamLook, this._animTime, { x: np.look.x, y: np.look.y, z: np.look.z, overwrite: "all", ease: this._animEase});
+                
+                TweenMax.to(this._transCamRot, this._animTime, { x: np.rot.x, y: np.rot.y, z: np.rot.z, overwrite: "all", ease: this._animEase});
+                TweenMax.to(this._transCamUp, this._animTime, { x: np.up.x, y: np.up.y, z: np.up.z, overwrite: "all", ease: this._animEase});
                 
                 this._inTransition = true;
             } else {
@@ -344,6 +365,26 @@ module webglExp {
                     break;
                 }
             }
+        }
+
+        saveCamPos() {
+            var count = 0;
+
+            if(this._camPosList.length < 10) {
+                this._camPosList.push({
+                    pos: this._camera.position.clone(),
+                    rot: this._camera.rotation.clone(),
+                    up: this._camera.up.clone()
+                });
+                count = this._camPosList.length - 1;
+                } else {
+
+                }
+            
+            (<HTMLElement>document.querySelector('body .tips')).innerHTML = "Camera Position saved, can be retrieve with \'" + count + "\' key";
+            (<HTMLElement>document.querySelector('body .tips')).classList.add("show");
+            clearTimeout(this._tipHide);
+            this._tipHide = window.setTimeout(function() { (<HTMLElement>document.querySelector('body .tips')).classList.remove("show"); }, 2000);
         }
 
         restartVideo() {
@@ -396,27 +437,6 @@ module webglExp {
             this._blendComposer.addPass(this._blendPass);
         }
 
-        saveCamPos() {
-            var lookAt:THREE.Vector3 = new THREE.Vector3( 0, 0, -1 );
-            lookAt.applyMatrix4(this._camera.matrixWorld);
-            var count = 0;
-
-            if(this._camPosList.length < 10) {
-                this._camPosList.push({
-                    pos: this._camera.position.clone(),
-                    look: lookAt
-                });
-                count = this._camPosList.length - 1;
-                } else {
-
-                }
-            
-            (<HTMLElement>document.querySelector('body .tips')).innerHTML = "Camera Position saved, can be retrieve with \'" + count + "\' key";
-            (<HTMLElement>document.querySelector('body .tips')).classList.add("show");
-            clearTimeout(this._tipHide);
-            this._tipHide = window.setTimeout(function() { (<HTMLElement>document.querySelector('body .tips')).classList.remove("show"); }, 2000);
-        }
-
 
 		render() {
 
@@ -436,7 +456,9 @@ module webglExp {
 
             if(this._inTransition) {
                 this._camera.position.set( this._transCamPos.x, this._transCamPos.y, this._transCamPos.z );
-                this._camera.lookAt( this._transCamLook );
+                this._camera.rotation.set( this._transCamRot.x, this._transCamRot.y, this._transCamRot.z );
+                this._camera.up.set( this._transCamUp.x, this._transCamUp.y, this._transCamUp.z );
+                this._camera.updateProjectionMatrix();
             } else {
                 this._fpc.update(1.0);
             }
