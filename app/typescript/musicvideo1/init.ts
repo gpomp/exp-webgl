@@ -26,6 +26,8 @@ module webglExp {
         private _uniforms;
         private _attributes;
 
+        private _isPaused: boolean;
+
         private v2c: utils.Video2Canvas;
 
         public shaderMat: THREE.ShaderMaterial;
@@ -36,6 +38,8 @@ module webglExp {
             this._dir = dir;
             this._time = 0;
             this._speed = 0.0005 + Math.random() * 0.0005;
+
+            this._isPaused = false;
 
             this.v2c = new utils.Video2Canvas(this.audioLoaded);
 
@@ -54,6 +58,10 @@ module webglExp {
                 radius: {
                     type: 'f',
                     value: radius
+                },
+                enableRing: {
+                    type: 'f',
+                    value: 1
                 },
                 swarmPos: {
                     type: 'v3',
@@ -89,6 +97,17 @@ module webglExp {
             video.pause();
             video.currentTime = 0;
             video.load();
+        }
+
+        pausePlayVideo() {
+            var video:HTMLVideoElement = this.v2c.getVideo();
+            if(!this._isPaused) {
+                video.pause();
+            } else {
+                video.play(); 
+            }
+            
+            this._isPaused = !this._isPaused;    
         }
 
         audioLoaded = () => {
@@ -136,6 +155,8 @@ module webglExp {
         private _verticesX: number;
         private _verticesY: number;
 
+        private _enableRing: boolean;
+
 
         private _swarm: webglExp.Swarm;
 
@@ -158,6 +179,8 @@ module webglExp {
             this._tipHide = -1;
 
             this._lineAlpha = 1;
+
+            this._enableRing = true;
 
             this._gui = super.getGui().get_gui();
 
@@ -200,6 +223,7 @@ module webglExp {
             this._animEaseLabel = "expoInOut";
 
             this._gui.add(this, "restartVideo");
+            this._gui.add(this, "pausePlayVideo");
 
             var cameraFolder = this._gui.addFolder('Camera settings');
             cameraFolder.add(this, "_lookAtCenter").name('look At Center');
@@ -252,6 +276,12 @@ module webglExp {
 
             lineFolder.add(this, "_verticesX", 10, 900).name("Horizontal points").onChange(this.changeGeomNumber);
             lineFolder.add(this, "_verticesY", 10, 900).name("Vertical points").onChange(this.changeGeomNumber);
+            lineFolder.add(this, "_enableRing").name("show ring").onChange(() => {
+                console.log(this._enableRing);
+                for (var i = 0; i < this._swarmList.length; ++i) {
+                    this._swarmList[i].shaderMat.uniforms.enableRing.value = this._enableRing ? 1 : 0;
+                }
+            });
 
             lineFolder.open();
 
@@ -363,6 +393,9 @@ module webglExp {
                     case 80:
                         this.saveCamPos();
                     break;
+                    case 86:
+                        this.pausePlayVideo();
+                    break;
                 }
             }
         }
@@ -385,6 +418,12 @@ module webglExp {
             (<HTMLElement>document.querySelector('body .tips')).classList.add("show");
             clearTimeout(this._tipHide);
             this._tipHide = window.setTimeout(function() { (<HTMLElement>document.querySelector('body .tips')).classList.remove("show"); }, 2000);
+        }
+
+        pausePlayVideo() {
+            for (var i = 0; i < this._swarmList.length; ++i) {
+                this._swarmList[i].pausePlayVideo();
+            }
         }
 
         restartVideo() {

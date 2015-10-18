@@ -8,6 +8,7 @@ uniform float radius;
 uniform sampler2D text;
 uniform int audioData[160];
 uniform float maxAV;
+uniform float enableRing;
 
 attribute vec3 timeD;
 
@@ -45,12 +46,16 @@ void main() {
     float dx = x - pos.x;
     float dy = y - pos.y;
     float distSquare = abs(dx * dx + dy * dy);
-    float inArea = 1.0 - max(0.0, min(1.0, distSquare / maxDist));
+    float inArea = (1.0 - max(0.0, min(1.0, distSquare / maxDist))) * enableRing;
 
     int soundPos = int(percAngle * 160.0);
     float aData = float(audioData[soundPos]);
 
-    texel.rgb += inArea * vec3(percAngle, 1.0 - percAngle, aData / maxAV);
+    float percAdd = mod(percAngle + time * 0.001, 1.0);
+
+    float percAngleMiddle = abs(percAdd * 2.0 - 1.0);
+
+    texel.rgb += inArea * vec3((percAngleMiddle), 1.0 - percAngleMiddle, max(0.0, aData / maxAV)) * enableRing;
 
     texel.rgb += t.rgb * (1.0 - inArea);
 
